@@ -48,6 +48,7 @@ export async function POST(req: Request) {
             solicitudId,
             metodoPago: "Stripe",
             referenciaPago: String(referencia),
+            montoPagado: Number(payment.amount_total ?? payment.amount_received ?? 35000) / 100,
           });
         } catch (err) {
           console.error("Error confirmando pago del evento", err);

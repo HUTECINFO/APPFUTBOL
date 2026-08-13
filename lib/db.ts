@@ -91,7 +91,8 @@ const models: Record<string, ModelConfig> = {
 
 const dateFields = new Set([
   "createdAt", "updatedAt", "emailVerified", "expires", "fechaNacimiento", "fecha", "fechaPago", "ultimaLeido",
-  "expiraEn", "waiverAceptadoEn", "revisadoEn", "fechaInicio", "fechaFin",
+  "expiraEn", "waiverAceptadoEn", "revisadoEn", "fechaInicio", "fechaFin", "firmadoEn",
+  "cupoReservadoHasta", "checkedInAt",
 ]);
 
 function fromDatabase(value: any): any {

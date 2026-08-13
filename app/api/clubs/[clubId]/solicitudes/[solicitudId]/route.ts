@@ -7,12 +7,14 @@ import { actorFromSession, canManageClub } from "@/lib/authorization";
 import { logAudit } from "@/lib/audit";
 
 const patchSchema = z.object({
-  action: z.enum(["approve", "reject", "waitlist"]),
+  action: z.enum(["approve", "reject", "waitlist", "assign_group", "checkin", "undo_checkin"]),
   equipoId: z.string().optional(),
   posicion: z.enum(["Portero", "Defensa", "Mediocampista", "Delantero"]).optional(),
   descuentoPorcentaje: z.number().min(0).max(100).optional(),
   motivoRechazo: z.string().max(500).optional(),
   notasAdmin: z.string().max(1000).optional(),
+  grupoAsignado: z.string().max(100).optional(),
+  kitEntregado: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -35,12 +37,36 @@ export async function PATCH(
       return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
     }
 
+    const body = await req.json();
+    const data = patchSchema.parse(body);
+
+    if (["assign_group", "checkin", "undo_checkin"].includes(data.action)) {
+      if (solicitud.estado !== "APROBADA") {
+        return NextResponse.json({ error: "Solo se puede operar un registro con pago aprobado" }, { status: 400 });
+      }
+      const updated = await db.solicitudInscripcion.update({
+        where: { id: solicitud.id },
+        data: {
+          ...(data.action === "assign_group" ? { grupoAsignado: data.grupoAsignado || null } : {}),
+          ...(data.action === "checkin" ? { checkedInAt: new Date(), kitEntregado: data.kitEntregado ?? solicitud.kitEntregado } : {}),
+          ...(data.action === "undo_checkin" ? { checkedInAt: null, kitEntregado: false } : {}),
+        },
+      });
+      await logAudit({
+        clubId: params.clubId,
+        entidad: "solicitud",
+        entidadId: solicitud.id,
+        accion: data.action,
+        actorId: session.user.id,
+        actorRol: session.user.role,
+        cambios: { grupoAsignado: data.grupoAsignado, kitEntregado: data.kitEntregado },
+      });
+      return NextResponse.json(updated);
+    }
+
     if (solicitud.estado === "APROBADA") {
       return NextResponse.json({ error: "Esta solicitud ya fue aprobada" }, { status: 400 });
     }
-
-    const body = await req.json();
-    const data = patchSchema.parse(body);
 
     if (data.action === "reject") {
       const updated = await db.solicitudInscripcion.update({

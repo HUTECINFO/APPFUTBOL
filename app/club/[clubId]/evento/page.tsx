@@ -68,8 +68,10 @@ export default async function EventoDashboardPage({
       cupo: equipo.cupoMaximo ?? EVENTO_TOUR.cupoPorSede,
       inscritos: equipo._count.jugadores,
       pagados: pagadosSede,
-      pendientes: deSede.length - pagadosSede,
-      ingresosUsd: pagadosSede * EVENTO_TOUR.precioUsd,
+      pendientes: deSede.filter((s: any) => s.estado === "PENDIENTE" || s.estado === "LISTA_ESPERA").length,
+      ingresosUsd: deSede
+        .filter((s: any) => s.estado === "APROBADA")
+        .reduce((total: number, s: any) => total + Number(s.montoPagado ?? EVENTO_TOUR.precioUsd), 0),
     };
   });
 

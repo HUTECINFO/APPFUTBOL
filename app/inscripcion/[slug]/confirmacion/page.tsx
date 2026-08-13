@@ -6,6 +6,7 @@ import { confirmarPagoEvento } from "@/lib/evento-inscripcion";
 import { CrearClaveForm } from "@/components/inscripcion/crear-clave-form";
 import { RetryCheckoutButton } from "@/components/inscripcion/retry-checkout-button";
 import { CheckCircle2, Goal, KeyRound, MapPin, XCircle } from "lucide-react";
+import QRCode from "qrcode";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +69,7 @@ export default async function ConfirmacionPage({
           solicitudId,
           metodoPago: "Stripe",
           referenciaPago: String(checkout.payment_intent || checkout.id),
+          montoPagado: Number(checkout.amount_total ?? EVENTO_TOUR.precioUsd * 100) / 100,
         });
       } catch (err: any) {
         errorPago = err.message || "No se pudo verificar el pago.";
@@ -105,6 +107,12 @@ export default async function ConfirmacionPage({
     select: { password: true },
   });
   const necesitaClave = !tutor?.password;
+  const confirmationNumber = solicitud.numeroConfirmacion || `UGT26-${solicitud.id.slice(0, 8).toUpperCase()}`;
+  const qrDataUrl = await QRCode.toDataURL(`tour-checkin:${solicitud.id}:${confirmationNumber}`, {
+    width: 320,
+    margin: 1,
+    color: { dark: "#07110b", light: "#ffffff" },
+  });
 
   return (
     <Shell>
@@ -123,7 +131,7 @@ export default async function ConfirmacionPage({
           </div>
           <div className="min-w-0">
             <p className="truncate font-display text-lg font-bold uppercase text-white">{solicitud.nombreJugador}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-pitch-300">Portero · {formatUsd(EVENTO_TOUR.precioUsd)} USD pagados</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-pitch-300">Portero · {formatUsd(solicitud.montoPagado || EVENTO_TOUR.precioUsd)} USD pagados</p>
           </div>
         </div>
         {solicitud.equipo && (
@@ -133,8 +141,19 @@ export default async function ConfirmacionPage({
           </p>
         )}
         <p className="border-t border-dashed border-white/10 pt-3 text-[10px] uppercase tracking-widest text-white/35">
-          Folio {solicitud.id.slice(0, 8).toUpperCase()}
+          Confirmación {confirmationNumber}
         </p>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/10 bg-white p-3">
+        <img src={qrDataUrl} alt={`Código QR de check-in ${confirmationNumber}`} className="mx-auto h-44 w-44" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-dark-900">Presenta este código en el check-in</p>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-xs leading-5 text-white/55">
+        <p><strong className="text-white/80">Llegada:</strong> 30 minutos antes del horario de inicio.</p>
+        <p><strong className="text-white/80">Material:</strong> guantes, ropa de entrenamiento, tachones, botella de agua y protector solar.</p>
+        <p><strong className="text-white/80">Dirección y canal:</strong> se publicarán en la app y se enviarán al correo registrado cuando queden confirmados.</p>
       </div>
 
       <div className="mt-6 text-left">
@@ -180,4 +199,3 @@ function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

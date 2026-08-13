@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatUsd } from "@/lib/evento-tour";
 import { cn } from "@/lib/utils";
-import { CircleDollarSign, Goal, Hourglass, MapPin, Users } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Goal, Hourglass, MapPin, PackageCheck, Search, Users } from "lucide-react";
 
 interface Kpis {
   ingresosUsd: number;
@@ -49,6 +53,10 @@ const ESTADO_LABEL: Record<string, string> = {
 };
 
 export function EventoDashboardView({ esEvento, clubNombre, kpis, sedes, solicitudes }: EventoDashboardViewProps) {
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [working, setWorking] = useState("");
+  const [groupDraft, setGroupDraft] = useState<Record<string, string>>({});
   if (!esEvento) {
     return (
       <div className="mx-auto max-w-5xl">
@@ -65,6 +73,23 @@ export function EventoDashboardView({ esEvento, clubNombre, kpis, sedes, solicit
   }
 
   const ocupacion = kpis.cupoTotal > 0 ? Math.round((kpis.pagados / kpis.cupoTotal) * 100) : 0;
+  const query = search.trim().toLocaleLowerCase();
+
+  const updateRegistration = async (id: string, body: Record<string, unknown>) => {
+    setWorking(id);
+    const res = await fetch(`/api/clubs/${location.pathname.split("/")[2]}/solicitudes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setWorking("");
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || "No se pudo actualizar el registro");
+      return;
+    }
+    router.refresh();
+  };
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -98,9 +123,9 @@ export function EventoDashboardView({ esEvento, clubNombre, kpis, sedes, solicit
         />
         <KpiCard
           icon={Hourglass}
-          label="Pendientes de pago"
+          label="Pendientes / espera"
           value={String(kpis.pendientesPago)}
-          hint="solicitudes sin pagar"
+          hint="sin pago confirmado"
           accent="text-blue-400"
           delay={0.1}
         />
@@ -159,51 +184,47 @@ export function EventoDashboardView({ esEvento, clubNombre, kpis, sedes, solicit
         })}
       </div>
 
-      <h2 className="mb-3 font-display text-lg font-semibold uppercase tracking-wide">Solicitudes del evento</h2>
-      <Card className="glass-panel overflow-hidden">
-        {solicitudes.length === 0 ? (
-          <p className="p-8 text-center text-white/50">Aún no hay solicitudes para este evento.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-left text-[10px] font-bold uppercase tracking-widest text-white/40">
-                  <th className="px-5 py-3">Portero</th>
-                  <th className="px-5 py-3">Sede</th>
-                  <th className="px-5 py-3">Tutor</th>
-                  <th className="px-5 py-3">Estado</th>
-                  <th className="px-5 py-3 text-right">Monto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {solicitudes.map((s) => (
-                  <tr key={s.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-white">{s.nombreJugador}</p>
-                      <p className="text-xs text-white/40">
-                        {new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" }).format(new Date(s.createdAt))}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3 text-white/70">{s.equipo?.nombre || "—"}</td>
-                    <td className="px-5 py-3">
-                      <p className="text-white/70">{s.nombreTutor}</p>
-                      <p className="text-xs text-white/40">{s.emailTutor}</p>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={cn("rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest", ESTADO_STYLE[s.estado] || ESTADO_STYLE.PENDIENTE)}>
-                        {ESTADO_LABEL[s.estado] || s.estado}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right font-display font-bold tabular-nums text-white">
-                      {s.estado === "APROBADA" ? formatUsd(kpis.precioUsd) : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div><h2 className="font-display text-lg font-semibold uppercase tracking-wide">Operación por ciudad</h2><p className="text-xs text-white/40">Busca por jugador, tutor, confirmación o escanea el QR.</p></div>
+        <div className="relative w-full sm:max-w-sm"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar o escanear QR" className="pl-9" /></div>
+      </div>
+
+      <div className="space-y-6">
+        {sedes.map((sede) => {
+          const rows = solicitudes.filter((item) => {
+            if (item.equipo?.id !== sede.id) return false;
+            if (!query) return true;
+            const haystack = [item.id, item.numeroConfirmacion, item.nombreJugador, item.nombreTutor, item.emailTutor, item.grupoAsignado].filter(Boolean).join(" ").toLocaleLowerCase();
+            return haystack.includes(query) || query.includes(String(item.id).toLocaleLowerCase());
+          });
+          return (
+            <Card key={sede.id} className="glass-panel overflow-hidden">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4"><div><h3 className="font-display text-xl font-bold uppercase">{sede.nombre}</h3><p className="text-xs text-white/40">{sede.pagados} pagados · {sede.pendientes} pendientes · {formatUsd(sede.ingresosUsd)}</p></div><MapPin className="h-5 w-5 text-pitch-400" /></div>
+              {rows.length === 0 ? <p className="p-6 text-sm text-white/40">No hay registros que coincidan.</p> : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1180px] text-sm">
+                    <thead><tr className="border-b border-white/10 text-left text-[9px] font-bold uppercase tracking-widest text-white/35"><th className="px-4 py-3">Jugador</th><th className="px-4 py-3">Nivel / tallas</th><th className="px-4 py-3">Pago y firma</th><th className="px-4 py-3">Tutor</th><th className="px-4 py-3">Salud</th><th className="px-4 py-3">Grupo</th><th className="px-4 py-3">Check-in</th></tr></thead>
+                    <tbody>{rows.map((item) => {
+                      const birth = new Date(item.fechaNacimiento);
+                      const age = new Date().getFullYear() - birth.getFullYear() - (new Date() < new Date(new Date().getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+                      const signed = Boolean(item.firmaTutor && item.waiverResponsabilidad && item.autorizacionMedica && item.autorizacionImagen && item.politicaCancelacion && item.codigoConducta);
+                      return <tr key={item.id} className="border-b border-white/5 align-top last:border-0">
+                        <td className="px-4 py-4"><p className="font-semibold text-white">{item.nombreJugador}</p><p className="text-xs text-white/40">{age} años · {item.categoriaNacimiento || "—"}</p><p className="mt-1 text-[10px] text-white/30">{item.numeroConfirmacion || item.id.slice(0, 8).toUpperCase()}</p></td>
+                        <td className="px-4 py-4 text-xs text-white/60"><p>{item.nivel || "—"} · {item.anosPortero ?? "—"} años GK</p><p>Jersey {item.tallaJersey || "—"} · Guantes {item.tallaGuantes || "—"}</p><p>{item.clubActual || "Sin academia"}</p></td>
+                        <td className="px-4 py-4"><span className={cn("rounded-full border px-2 py-1 text-[9px] font-bold uppercase", ESTADO_STYLE[item.estado] || ESTADO_STYLE.PENDIENTE)}>{ESTADO_LABEL[item.estado] || item.estado}</span><p className="mt-2 text-xs text-white/60">{item.montoPagado ? formatUsd(item.montoPagado) : "—"}</p><p className={cn("text-[10px]", signed ? "text-green-400" : "text-red-400")}>{signed ? "Firma completa" : "Firma incompleta"}</p></td>
+                        <td className="px-4 py-4 text-xs text-white/60"><p>{item.nombreTutor}</p><p>{item.telefonoTutor || "—"}</p><p className="max-w-[190px] truncate">{item.emailTutor}</p></td>
+                        <td className="max-w-[200px] px-4 py-4 text-xs text-white/60"><p>{item.lesionesCondiciones || "Sin observaciones"}</p><p className="mt-1 text-white/35">Seguro: {item.seguroMedicoProveedor || "—"}</p></td>
+                        <td className="px-4 py-4"><div className="flex gap-2"><Input value={groupDraft[item.id] ?? item.grupoAsignado ?? ""} onChange={(event) => setGroupDraft({ ...groupDraft, [item.id]: event.target.value })} placeholder="Ej. U12-A" className="h-9 w-28" /><Button size="sm" variant="outline" disabled={working === item.id || item.estado !== "APROBADA"} onClick={() => updateRegistration(item.id, { action: "assign_group", grupoAsignado: groupDraft[item.id] ?? item.grupoAsignado ?? "" })}>Guardar</Button></div></td>
+                        <td className="px-4 py-4">{item.checkedInAt ? <div><p className="flex items-center gap-1 text-xs font-semibold text-green-400"><CheckCircle2 className="h-4 w-4" /> Presente</p><p className="mt-1 flex items-center gap-1 text-[10px] text-white/40"><PackageCheck className="h-3 w-3" /> {item.kitEntregado ? "Kit entregado" : "Kit pendiente"}</p><Button size="sm" variant="ghost" className="mt-1 h-7 text-[10px] text-white/40" disabled={working === item.id} onClick={() => updateRegistration(item.id, { action: "undo_checkin" })}>Deshacer</Button></div> : <Button size="sm" disabled={working === item.id || item.estado !== "APROBADA" || !signed} onClick={() => updateRegistration(item.id, { action: "checkin", kitEntregado: true })}>Check-in + kit</Button>}</td>
+                      </tr>;
+                    })}</tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { EVENTO_TOUR } from "@/lib/evento-tour";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 const schema = z.object({ solicitudId: z.string().min(1) });
 
@@ -25,6 +26,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "La solicitud fue rechazada" }, { status: 400 });
     }
 
+    const deadline = process.env.GOALKEEPER_TOUR_REGISTRATION_DEADLINE;
+    if (deadline && Date.now() > new Date(deadline).getTime()) {
+      return NextResponse.json({ error: "El periodo de inscripción ha cerrado" }, { status: 409 });
+    }
+
+    const { data: reserved, error: reservationError } = await supabaseAdmin.rpc("reserve_tour_spot", {
+      p_solicitud_id: solicitud.id,
+    });
+    if (reservationError) {
+      return NextResponse.json({ error: "No se pudo verificar el cupo. Intenta nuevamente." }, { status: 503 });
+    }
+    if (!reserved) {
+      return NextResponse.json({ error: "La sede alcanzó su cupo de 60 porteros", listaEspera: true }, { status: 409 });
+    }
+
     const origin = new URL(req.url).origin;
     const secretKey = process.env.STRIPE_SECRET_KEY;
 
@@ -40,6 +56,8 @@ export async function POST(req: Request) {
     const priceId = process.env.STRIPE_GOALKEEPER_TOUR_PRICE_ID;
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
+      allow_promotion_codes: true,
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       client_reference_id: solicitud.id,
       customer_email: solicitud.emailTutor,
       line_items: [

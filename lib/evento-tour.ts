@@ -6,6 +6,12 @@ export const EVENTO_TOUR = {
   moneda: "usd",
   posicionFija: "Portero",
   cupoPorSede: 60,
+  sedes: {
+    "El Paso": { fechaInicio: "2026-09-19", fechaFin: "2026-09-20" },
+    "Dallas–Fort Worth": { fechaInicio: "2026-10-03", fechaFin: "2026-10-04" },
+    Houston: { fechaInicio: "2026-10-17", fechaFin: "2026-10-18" },
+    "San Antonio": { fechaInicio: "2026-10-31", fechaFin: "2026-11-01" },
+  },
 } as const;
 
 export function esClubEvento(slug?: string | null): boolean {
