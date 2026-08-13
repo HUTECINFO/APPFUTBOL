@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { ClubSidebar } from "@/components/layout/club-sidebar";
 import { ClubHeader } from "@/components/layout/club-header";
 import { brandCssVariables } from "@/lib/theme";
+import { esClubEvento } from "@/lib/evento-tour";
 
 export default async function ClubLayout({
   children,
@@ -39,6 +40,7 @@ export default async function ClubLayout({
       select: {
         id: true,
         nombre: true,
+        slug: true,
         logoUrl: true,
         colorPrimario: true,
         colorSecundario: true,
@@ -55,6 +57,7 @@ export default async function ClubLayout({
       select: {
         id: true,
         nombre: true,
+        slug: true,
         logoUrl: true,
         colorPrimario: true,
         colorSecundario: true,
@@ -73,7 +76,7 @@ export default async function ClubLayout({
     <div className="relative flex min-h-screen overflow-x-clip" style={themeVars}>
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--one" />
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--two" />
-      {club && <ClubSidebar clubNombre={club.nombre} role={role} />}
+      {club && <ClubSidebar clubNombre={club.nombre} role={role} esEvento={esClubEvento(club.slug)} />}
       <div className="relative z-10 flex-1 flex flex-col min-h-screen">
         <ClubHeader />
         <main id="contenido-principal" className="page-enter flex-1 p-4 sm:p-6 lg:p-8">{children}</main>

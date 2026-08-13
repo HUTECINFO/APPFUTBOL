@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 const tourTeams = [
@@ -35,7 +36,26 @@ async function main() {
     )
   );
 
+  await db.usuario.upsert({
+    where: { email: "tour@clubone.io" },
+    update: {
+      password: await bcrypt.hash("tour2026", 10),
+      rol: "CLUB_ADMIN",
+      activo: true,
+      clubesAdmin: { connect: { id: club.id } },
+    },
+    create: {
+      nombre: "Admin USA Goalkeeper Tour",
+      email: "tour@clubone.io",
+      password: await bcrypt.hash("tour2026", 10),
+      rol: "CLUB_ADMIN",
+      activo: true,
+      clubesAdmin: { connect: { id: club.id } },
+    },
+  });
+
   console.log("Registro público del USA Goalkeeper Tour listo con 4 sedes.");
+  console.log("Admin del evento: tour@clubone.io / tour2026");
 }
 
 main().catch((error) => {

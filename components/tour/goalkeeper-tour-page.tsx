@@ -91,7 +91,7 @@ const copy = {
     chooseCity: "ELIGE TU CIUDAD",
     selectLocation: "Selecciona la sede de tu clínica",
     chooseStop: "Elige tu parada",
-    capacity: "La inscripción y el cupo se administran por separado en cada ciudad. Tu lugar se reserva únicamente después de aprobarse el pago de $350.",
+    capacity: "La inscripción y el cupo se administran por separado en cada ciudad. Tu lugar se reserva únicamente después de aprobarse el pago de $350 USD (dólares americanos).",
     stop: "PARADA",
     selectCity: "SELECCIONAR SEDE",
     registrationSoon: "Completar registro",
@@ -106,10 +106,10 @@ const copy = {
     steps: [
       { title: "Datos del jugador", body: "Información del portero, nivel de experiencia, tallas y notas médicas." },
       { title: "Autorización del tutor", body: "Contacto del tutor, exenciones del evento, consentimiento médico y firma electrónica." },
-      { title: "Pago seguro", body: "Paga la inscripción de $350 con tarjeta. Tu lugar se confirma al aprobarse el pago." },
+      { title: "Pago seguro", body: "Paga la inscripción de $350 USD con tarjeta. Tu lugar se confirma al aprobarse el pago." },
     ],
-    paymentTitle: "Tu solicitud queda registrada al enviar el formulario.",
-    paymentText: "Club One te contactará con la confirmación, información del evento y los siguientes pasos de pago.",
+    paymentTitle: "Al enviar el formulario pasas directo al pago seguro.",
+    paymentText: "Cuando se aprueba tu pago de $350 USD tu lugar queda confirmado y creas el acceso a tu app en el momento: avisos del staff, información de tu sede y el perfil de tu portero.",
     limited: "Limitado a 60 porteros por ciudad",
     finalCta: "¿Listo para dominar tu área?",
     footer: "© 2026 Club One by HUTEC. USA Goalkeeper Tour.",
@@ -128,7 +128,7 @@ const copy = {
     chooseCity: "CHOOSE YOUR CITY",
     selectLocation: "Select your clinic location",
     chooseStop: "Choose your stop",
-    capacity: "Registration and capacity are managed separately for every city. Your spot is held only after the $350 payment is approved.",
+    capacity: "Registration and capacity are managed separately for every city. Your spot is held only after the $350 USD payment is approved.",
     stop: "STOP",
     selectCity: "SELECT LOCATION",
     registrationSoon: "Complete registration",
@@ -143,10 +143,10 @@ const copy = {
     steps: [
       { title: "Player details", body: "Goalkeeper information, experience level, sizes, and medical notes." },
       { title: "Parent approval", body: "Guardian contact, event waivers, medical consent, and e-signature." },
-      { title: "Secure payment", body: "Pay the $350 registration fee by card. Your spot is confirmed after approval." },
+      { title: "Secure payment", body: "Pay the $350 USD registration fee by card. Your spot is confirmed after approval." },
     ],
-    paymentTitle: "Your request is recorded when you submit the form.",
-    paymentText: "Club One will contact you with confirmation, event information, and next payment steps.",
+    paymentTitle: "Submitting the form takes you straight to secure checkout.",
+    paymentText: "Once your $350 USD payment is approved, your spot is confirmed and you create your app access on the spot: staff updates, venue info, and your goalkeeper's profile.",
     limited: "Limited to 60 goalkeepers per city",
     finalCta: "Ready to own your box?",
     footer: "© 2026 Club One by HUTEC. USA Goalkeeper Tour.",
@@ -258,7 +258,7 @@ export function GoalkeeperTourPage({ registrationLinks }: { registrationLinks: R
             <motion.aside initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.18 }} className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] shadow-2xl shadow-black/30">
               <div className="grid grid-cols-2 divide-x divide-y divide-white/10">
                 <Stat icon={MapPin} value="04" label={text.texasCities} />
-                <Stat icon={CircleDollarSign} value="$350" label={text.perGoalkeeper} />
+                <Stat icon={CircleDollarSign} value="$350 USD" label={text.perGoalkeeper} />
                 <Stat icon={Users} value="60" label={text.spotsPerCity} />
                 <Stat icon={Clock3} value="02" label={text.trainingDays} />
               </div>

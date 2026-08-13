@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { WAIVER_VERSION } from "@/lib/waiver";
+import { esClubEvento } from "@/lib/evento-tour";
 
 const schema = z.object({
   equipoId: z.string().optional(),
@@ -33,6 +34,10 @@ export async function POST(
 
     const body = await req.json();
     const data = schema.parse(body);
+
+    if (esClubEvento(params.slug) && !data.equipoId) {
+      return NextResponse.json({ error: "Selecciona la sede del tour para continuar" }, { status: 400 });
+    }
 
     let equipoId: string | null = null;
     let estado: "PENDIENTE" | "LISTA_ESPERA" = "PENDIENTE";

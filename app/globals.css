@@ -92,6 +92,61 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
   }
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .dock-bottom {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.875rem);
+  }
+  .pitch-stripes {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 40px,
+      transparent 40px,
+      transparent 80px
+    );
+  }
+  .pitch-lines {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .text-outline {
+    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.22);
+    color: transparent;
+  }
+  .matchday-glow {
+    box-shadow:
+      0 8px 40px rgba(31, 203, 107, 0.18),
+      0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+  .gold-glow {
+    box-shadow:
+      0 8px 40px rgba(242, 179, 61, 0.16),
+      0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@keyframes hero-sheen {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  55% { transform: translateX(240%) skewX(-18deg); }
+  100% { transform: translateX(240%) skewX(-18deg); }
+}
+
+.animate-hero-sheen {
+  animation: hero-sheen 4.5s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
 @keyframes page-enter {

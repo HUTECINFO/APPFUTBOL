@@ -57,6 +57,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 - Super Admin: `super@clubone.io` / `admin123`
 - Club Admin: `club@demo.mx` / `club123`
 - Entrenador: `coach@demo.mx` / `coach123`
+- Admin del evento (USA Goalkeeper Tour): `tour@clubone.io` / `tour2026` — se crea con `npm run tour:seed`
 
 ## Rutas principales
 
@@ -74,8 +75,20 @@ Abre [http://localhost:3000](http://localhost:3000).
 - `/club/[clubId]/background-checks` — Verificación de antecedentes
 - `/club/[clubId]/configuracion` — Configuración del club + bitácora de auditoría
 - `/inscripcion/[slug]` — Formulario público de inscripción
+- `/inscripcion/[slug]/pago` — Pago simulado del evento (solo sin `STRIPE_SECRET_KEY`)
+- `/inscripcion/[slug]/confirmacion` — Confirmación de pago y creación de acceso
 - `/usa-goalkeeper-tour-2026` — Landing y selección de sede del USA Goalkeeper Tour 2026
+- `/club/[clubId]/evento` — Panel de métricas del evento (USD), separado de la operación por suscripción
 - `/app/inicio` — Vista mobile PWA
+
+### Flujo del evento (USA Goalkeeper Tour)
+
+1. La familia llena `/inscripcion/usa-goalkeeper-tour-2026` (posición única: **Portero**).
+2. Al enviar, se crea la solicitud y se abre Stripe Checkout con el precio del evento
+   (**$350 USD**; usa `STRIPE_GOALKEEPER_TOUR_PRICE_ID` del catálogo de Stripe si existe).
+3. Pago aprobado → la solicitud se aprueba sola, se crea la cuenta del tutor y el registro
+   del portero (vía webhook `checkout.session.completed` o la página de confirmación).
+4. En la confirmación el tutor crea su contraseña y entra a la app (`/app/inicio`).
 
 La configuración de los cuatro formularios externos y sus enlaces está en [`docs/USA_GOALKEEPER_TOUR_JOTFORM.md`](docs/USA_GOALKEEPER_TOUR_JOTFORM.md).
 

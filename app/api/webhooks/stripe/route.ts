@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { confirmarPagoEvento } from "@/lib/evento-inscripcion";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -32,11 +33,33 @@ export async function POST(req: Request) {
       },
     });
 
-    if (event.type === "invoice.payment_succeeded" || event.type === "payment_intent.succeeded") {
+    if (
+      event.type === "invoice.payment_succeeded" ||
+      event.type === "payment_intent.succeeded" ||
+      event.type === "checkout.session.completed"
+    ) {
       const payment = event.data.object as any;
+      const solicitudId = payment.metadata?.solicitudId || payment.client_reference_id;
+
+      if (solicitudId && (event.type !== "checkout.session.completed" || payment.payment_status === "paid")) {
+        const referencia = payment.payment_intent || payment.id;
+        try {
+          await confirmarPagoEvento({
+            solicitudId,
+            metodoPago: "Stripe",
+            referenciaPago: String(referencia),
+          });
+        } catch (err) {
+          console.error("Error confirmando pago del evento", err);
+        }
+        return NextResponse.json({ received: true });
+      }
+
       const mensualidadId = payment.metadata?.mensualidadId;
 
-      if (mensualidadId) {
+      // Las mensualidades se confirman con los eventos de pago originales;
+      // checkout.session.completed solo aplica al flujo del evento (solicitudId).
+      if (mensualidadId && event.type !== "checkout.session.completed") {
         const mensualidad = await db.mensualidad.findUnique({ where: { id: mensualidadId } });
         const pagoExistente = await db.pago.findFirst({
           where: { proveedor: "stripe", proveedorId: payment.id },

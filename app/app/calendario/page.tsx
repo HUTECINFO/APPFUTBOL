@@ -8,6 +8,13 @@ export default async function AppCalendarioPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
+  const jugadores = await db.jugador.findMany({
+    where: {
+      OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+    },
+    select: { id: true, nombre: true, equipoId: true },
+  });
+
   const eventos = await db.evento.findMany({
     where: {
       equipo: {
@@ -16,7 +23,7 @@ export default async function AppCalendarioPage() {
     },
     orderBy: { fecha: "asc" },
     include: {
-      equipo: { select: { id: true, nombre: true } },
+      equipo: { select: { id: true, nombre: true, clubId: true } },
       sede: { select: { id: true, nombre: true, googleMapsUrl: true } },
       asistencias: {
         where: { jugador: { OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }] } },
@@ -25,5 +32,5 @@ export default async function AppCalendarioPage() {
     },
   });
 
-  return <AppCalendarioView eventos={eventos} />;
+  return <AppCalendarioView eventos={eventos} jugadores={jugadores} />;
 }

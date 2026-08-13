@@ -17,8 +17,12 @@ export default async function AppLayout({
 
   return (
     <AppThemeProvider>
-      <div className="min-h-screen bg-dark-900 text-foreground">
-        <main id="contenido-principal" className="pb-20">{children}</main>
+      <div className="relative min-h-[100dvh] overflow-x-hidden bg-dark-900 text-foreground">
+        <div aria-hidden className="club-ambient-orb club-ambient-orb--one" />
+        <div aria-hidden className="club-ambient-orb club-ambient-orb--two" />
+        <main id="contenido-principal" className="relative z-10 mx-auto max-w-md pb-32">
+          {children}
+        </main>
         <BottomNav />
       </div>
     </AppThemeProvider>

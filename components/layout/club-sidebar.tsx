@@ -15,11 +15,15 @@ import {
   ClipboardList,
   ChevronLeft,
   ShieldCheck,
+  Goal,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const navItems = (clubId: string, role: string) => [
+const navItems = (clubId: string, role: string, esEvento: boolean) => [
   { href: `/club/${clubId}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+  ...(esEvento && (role === "SUPER_ADMIN" || role === "CLUB_ADMIN")
+    ? [{ href: `/club/${clubId}/evento`, label: "Evento", icon: Goal }]
+    : []),
   { href: `/club/${clubId}/equipos`, label: "Equipos", icon: Users },
   { href: `/club/${clubId}/calendario`, label: "Calendario", icon: Calendar },
   ...(role === "SUPER_ADMIN" || role === "CLUB_ADMIN"
@@ -37,7 +41,7 @@ const navItems = (clubId: string, role: string) => [
     : []),
 ];
 
-export function ClubSidebar({ clubNombre, role }: { clubNombre: string; role: string }) {
+export function ClubSidebar({ clubNombre, role, esEvento = false }: { clubNombre: string; role: string; esEvento?: boolean }) {
   const params = useParams();
   const pathname = usePathname();
   const clubId = params.clubId as string;
@@ -52,7 +56,7 @@ export function ClubSidebar({ clubNombre, role }: { clubNombre: string; role: st
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems(clubId, role).map((item) => {
+        {navItems(clubId, role, esEvento).map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
