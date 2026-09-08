@@ -3,14 +3,17 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PizarraTactica } from "@/components/tactica/pizarra-tactica";
+import { actorFromSession, canAccessTeam } from "@/lib/authorization";
 
-export default async function TacticaPage({
-  params,
-}: {
-  params: { clubId: string; equipoId: string };
-}) {
+export default async function TacticaPage(
+  props: {
+    params: Promise<{ clubId: string; equipoId: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!(await canAccessTeam(actorFromSession(session), params.clubId, params.equipoId))) redirect("/unauthorized");
 
   const equipo = await db.equipo.findFirst({
     where: {

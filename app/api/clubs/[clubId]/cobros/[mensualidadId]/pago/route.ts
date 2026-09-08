@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { actorFromSession, canManageClub } from "@/lib/authorization";
 import { z } from "zod";
+import { recordMonthlyPayment } from "@/lib/payments";
 
 const schema = z.object({
   metodoPago: z.enum(["Efectivo", "Transferencia", "Stripe", "Conekta"]),
@@ -11,8 +12,9 @@ const schema = z.object({
 
 export async function POST(
   req: Request,
-  { params }: { params: { clubId: string; mensualidadId: string } }
+  props: { params: Promise<{ clubId: string; mensualidadId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
@@ -29,25 +31,13 @@ export async function POST(
 
     if (!mensualidad) return NextResponse.json({ error: "Mensualidad no encontrada" }, { status: 404 });
 
-    const [updated] = await db.$transaction([
-      db.mensualidad.update({
-        where: { id: params.mensualidadId },
-        data: {
-          estado: "PAGADO",
-          fechaPago: new Date(),
-          metodoPago,
-        },
-      }),
-      db.pago.create({
-        data: {
-          mensualidadId: params.mensualidadId,
-          monto: mensualidad.monto,
-          metodoPago,
-          proveedor: metodoPago.toLowerCase(),
-          procesadoPorId: session.user.id,
-        },
-      }),
-    ]);
+    const updated = await recordMonthlyPayment({
+      mensualidadId: params.mensualidadId,
+      metodoPago,
+      proveedor: metodoPago.toLowerCase(),
+      proveedorId: `manual:${params.mensualidadId}`,
+      procesadoPorId: session.user.id,
+    });
 
     return NextResponse.json(updated);
   } catch (error: any) {

@@ -15,10 +15,8 @@ const schema = z.object({
   notas: z.string().max(1000).optional(),
 });
 
-export async function GET(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
@@ -37,10 +35,8 @@ export async function GET(
   return NextResponse.json(checks);
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 

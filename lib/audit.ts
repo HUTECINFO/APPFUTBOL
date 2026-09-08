@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 type AuditInput = {
@@ -16,6 +17,7 @@ export async function logAudit(input: AuditInput) {
   const { data, error } = await supabaseAdmin
     .from("audit_logs")
     .insert({
+      id: randomUUID(),
       clubId: input.clubId ?? null,
       entidad: input.entidad,
       entidadId: input.entidadId,

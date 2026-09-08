@@ -30,12 +30,13 @@ export async function canAccessClub(actor: Actor, clubId: string) {
   if (actor.role === "SUPER_ADMIN") return true;
 
   const [{ data: coach }, { data: player }, isAdmin] = await Promise.all([
-    supabaseAdmin.from("equipos").select("id").eq("clubId", clubId).eq("entrenadorId", actor.userId).maybeSingle(),
+    supabaseAdmin.from("equipos").select("id").eq("clubId", clubId).eq("entrenadorId", actor.userId).limit(1).maybeSingle(),
     supabaseAdmin
       .from("jugadores")
       .select("id, equipos!inner(clubId)")
       .or(`usuarioId.eq.${actor.userId},tutorId.eq.${actor.userId}`)
       .eq("equipos.clubId", clubId)
+      .limit(1)
       .maybeSingle(),
     isClubAdmin(actor.userId, clubId),
   ]);
@@ -48,7 +49,8 @@ export async function canManageClub(actor: Actor, clubId: string) {
 }
 
 export async function canAccessTeam(actor: Actor, clubId: string, equipoId: string) {
-  if (actor.role === "SUPER_ADMIN") return teamExists(clubId, equipoId);
+  if (!(await teamExists(clubId, equipoId))) return false;
+  if (actor.role === "SUPER_ADMIN") return true;
 
   const [{ data: coach }, { data: player }, isAdmin] = await Promise.all([
     supabaseAdmin
@@ -71,7 +73,8 @@ export async function canAccessTeam(actor: Actor, clubId: string, equipoId: stri
 }
 
 export async function canManageTeam(actor: Actor, clubId: string, equipoId: string) {
-  if (actor.role === "SUPER_ADMIN") return teamExists(clubId, equipoId);
+  if (!(await teamExists(clubId, equipoId))) return false;
+  if (actor.role === "SUPER_ADMIN") return true;
   if (actor.role === "CLUB_ADMIN") return isClubAdmin(actor.userId, clubId);
   if (actor.role !== "ENTRENADOR") return false;
 

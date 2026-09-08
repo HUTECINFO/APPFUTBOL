@@ -2,13 +2,14 @@ import { db } from "@/lib/db";
 import { InscripcionForm } from "@/components/inscripcion/inscripcion-form";
 import { toClientData } from "@/lib/serialize";
 
-export default async function InscripcionPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams?: { sede?: string };
-}) {
+export default async function InscripcionPage(
+  props: {
+    params: Promise<{ slug: string }>;
+    searchParams?: Promise<{ sede?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const club = await db.club.findUnique({
     where: { slug: params.slug },
     select: {

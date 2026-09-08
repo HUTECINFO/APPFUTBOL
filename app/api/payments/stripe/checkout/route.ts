@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requestOrigin } from "@/lib/request-origin";
 
 const schema = z.object({ mensualidadId: z.string().min(1) });
 
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     const stripe = new Stripe(secretKey, { apiVersion: "2023-10-16" });
-    const origin = new URL(req.url).origin;
+    const origin = requestOrigin(req);
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
       client_reference_id: mensualidad.id,

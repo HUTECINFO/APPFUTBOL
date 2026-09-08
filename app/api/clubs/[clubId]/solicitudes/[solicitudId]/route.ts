@@ -5,9 +5,11 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { actorFromSession, canManageClub } from "@/lib/authorization";
 import { logAudit } from "@/lib/audit";
+import { createAccountActivationToken } from "@/lib/account-activation";
+import { requestOrigin } from "@/lib/request-origin";
 
 const patchSchema = z.object({
-  action: z.enum(["approve", "reject", "waitlist", "assign_group", "checkin", "undo_checkin"]),
+  action: z.enum(["approve", "reject", "waitlist", "assign_group", "checkin", "undo_checkin", "activation_link"]),
   equipoId: z.string().optional(),
   posicion: z.enum(["Portero", "Defensa", "Mediocampista", "Delantero"]).optional(),
   descuentoPorcentaje: z.number().min(0).max(100).optional(),
@@ -19,8 +21,9 @@ const patchSchema = z.object({
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { clubId: string; solicitudId: string } }
+  props: { params: Promise<{ clubId: string; solicitudId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
@@ -39,6 +42,23 @@ export async function PATCH(
 
     const body = await req.json();
     const data = patchSchema.parse(body);
+
+    if (data.action === "activation_link") {
+      if (solicitud.estado !== "APROBADA" || !solicitud.jugadorCreadoId) {
+        return NextResponse.json({ error: "La solicitud todavía no tiene un jugador aprobado" }, { status: 400 });
+      }
+      const tutor = await db.usuario.findUnique({
+        where: { email: solicitud.emailTutor },
+        select: { id: true, email: true, password: true },
+      });
+      if (!tutor) return NextResponse.json({ error: "Cuenta del tutor no encontrada" }, { status: 404 });
+      if (tutor.password) {
+        return NextResponse.json({ error: "El tutor ya activó su cuenta" }, { status: 409 });
+      }
+      const token = createAccountActivationToken(tutor.id, tutor.email);
+      const activationUrl = `${requestOrigin(req)}/activar-cuenta?token=${encodeURIComponent(token)}`;
+      return NextResponse.json({ activationUrl });
+    }
 
     if (["assign_group", "checkin", "undo_checkin"].includes(data.action)) {
       if (solicitud.estado !== "APROBADA") {
@@ -177,7 +197,22 @@ export async function PATCH(
       userAgent: userAgent || undefined,
     });
 
-    return NextResponse.json(result);
+    const activationUrl = result.tutor.password
+      ? null
+      : `${requestOrigin(req)}/activar-cuenta?token=${encodeURIComponent(
+          createAccountActivationToken(result.tutor.id, result.tutor.email)
+        )}`;
+
+    return NextResponse.json({
+      solicitud: result.solicitud,
+      jugador: result.jugador,
+      tutor: {
+        id: result.tutor.id,
+        nombre: result.tutor.nombre,
+        email: result.tutor.email,
+      },
+      activationUrl,
+    });
   } catch (error: any) {
     if (error?.issues) {
       return NextResponse.json({ error: error.issues[0]?.message || "Datos inválidos" }, { status: 400 });

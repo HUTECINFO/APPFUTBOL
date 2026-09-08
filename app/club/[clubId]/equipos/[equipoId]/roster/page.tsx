@@ -3,14 +3,17 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RosterView } from "@/components/club/roster-view";
+import { actorFromSession, canAccessTeam } from "@/lib/authorization";
 
-export default async function RosterPage({
-  params,
-}: {
-  params: { clubId: string; equipoId: string };
-}) {
+export default async function RosterPage(
+  props: {
+    params: Promise<{ clubId: string; equipoId: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!(await canAccessTeam(actorFromSession(session), params.clubId, params.equipoId))) redirect("/unauthorized");
 
   const equipo = await db.equipo.findFirst({
     where: {

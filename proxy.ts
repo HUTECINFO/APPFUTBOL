@@ -2,11 +2,10 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
     const { pathname } = req.nextUrl;
     const role = req.nextauth.token?.role as string;
 
-    // Rutas protegidas por rol
     if (pathname.startsWith("/super-admin") && role !== "SUPER_ADMIN") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
@@ -23,9 +22,8 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized({ req, token }) {
-        if (!token) return false;
-        return true;
+      authorized({ token }) {
+        return Boolean(token);
       },
     },
   }

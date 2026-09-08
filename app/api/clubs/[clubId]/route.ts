@@ -16,10 +16,8 @@ const updateClubSchema = z.object({
   activo: z.boolean().optional(),
 }).strict();
 
-export async function GET(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   if (!(await canManageClub(actorFromSession(session), params.clubId))) {
@@ -40,10 +38,8 @@ export async function GET(
   return NextResponse.json(club);
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function PATCH(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 

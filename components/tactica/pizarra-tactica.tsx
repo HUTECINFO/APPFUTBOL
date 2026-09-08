@@ -2,12 +2,10 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save, Download, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Save, Download, UserPlus, UserMinus } from "lucide-react";
 import Link from "next/link";
 
 interface PizarraTacticaProps {
@@ -48,37 +46,70 @@ const formations: Record<string, Record<string, { x: number; y: number }>> = {
   },
 };
 
+type Player = {
+  id: string;
+  nombre: string;
+  apodo?: string | null;
+  dorsal?: number | null;
+  posicion?: string | null;
+};
+
+function orderedRoster(players: Player[]) {
+  return [...players].sort((a, b) => {
+    if (a.posicion === "Portero" && b.posicion !== "Portero") return -1;
+    if (b.posicion === "Portero" && a.posicion !== "Portero") return 1;
+    return (a.dorsal ?? 999) - (b.dorsal ?? 999);
+  });
+}
+
+function applyTemplate(players: Player[], templateName: string) {
+  const coordinates = Object.values(formations[templateName] || formations["4-3-3"]);
+  return Object.fromEntries(
+    orderedRoster(players).slice(0, 11).map((player, index) => [player.id, coordinates[index]])
+  );
+}
+
+function normalizeSavedFormation(
+  saved: Record<string, { x: number; y: number }> | undefined,
+  players: Player[]
+) {
+  if (!saved) return applyTemplate(players, "4-3-3");
+  const playerIds = new Set(players.map((player) => player.id));
+  if (Object.keys(saved).some((key) => playerIds.has(key))) {
+    return Object.fromEntries(Object.entries(saved).filter(([key]) => playerIds.has(key)));
+  }
+
+  const legacyCoordinates = Object.values(saved);
+  return Object.fromEntries(
+    orderedRoster(players).slice(0, 11).map((player, index) => [
+      player.id,
+      legacyCoordinates[index] || { x: 50, y: 50 },
+    ])
+  );
+}
+
 export function PizarraTactica({ equipo, clubId, role }: PizarraTacticaProps) {
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
   const canEdit = ["SUPER_ADMIN", "CLUB_ADMIN", "ENTRENADOR"].includes(role);
 
-  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>(
-    equipo.formaciones?.[0]?.esquema || formations["4-3-3"]
+  const roster = orderedRoster((equipo.jugadores || []) as Player[]);
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>(() =>
+    normalizeSavedFormation(equipo.formaciones?.[0]?.esquema, roster)
   );
-  const [formationName, setFormationName] = useState("4-3-3");
   const [saveName, setSaveName] = useState("");
   const [dragging, setDragging] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const players = [
-    { key: "portero", label: "POR", color: "#F2B33D" },
-    { key: "li", label: "LI", color: "#3B82F6" },
-    { key: "dci", label: "DCI", color: "#3B82F6" },
-    { key: "dcd", label: "DCD", color: "#3B82F6" },
-    { key: "ld", label: "LD", color: "#3B82F6" },
-    { key: "mci", label: "MCI", color: "#1FCB6B" },
-    { key: "mco", label: "MCO", color: "#1FCB6B" },
-    { key: "mcd", label: "MCD", color: "#1FCB6B" },
-    { key: "ei", label: "EI", color: "#EF4444" },
-    { key: "dc", label: "DC", color: "#EF4444" },
-    { key: "dd", label: "DD", color: "#EF4444" },
-    { key: "emi", label: "EMI", color: "#1FCB6B" },
-    { key: "emd", label: "EMD", color: "#1FCB6B" },
-    { key: "di", label: "DI", color: "#EF4444" },
-  ];
+  const starters = roster.filter((player) => positions[player.id]);
+  const substitutes = roster.filter((player) => !positions[player.id]);
 
-  const activePlayers = players.filter((p) => positions[p.key]);
+  const playerColor = (position?: string | null) => {
+    if (position === "Portero") return "#F2B33D";
+    if (position === "Defensa") return "#3B82F6";
+    if (position === "Delantero") return "#EF4444";
+    return "#1FCB6B";
+  };
 
   const handleMouseDown = (key: string) => {
     if (!canEdit) return;
@@ -101,8 +132,22 @@ export function PizarraTactica({ equipo, clubId, role }: PizarraTacticaProps) {
   };
 
   const loadFormation = (name: string) => {
-    setFormationName(name);
-    setPositions(formations[name]);
+    setPositions(applyTemplate(starters.length ? starters : roster, name));
+  };
+
+  const addStarter = (playerId: string) => {
+    if (Object.keys(positions).length >= 11) return;
+    const coordinates = Object.values(formations["4-3-3"]);
+    const nextPosition = coordinates[Object.keys(positions).length] || { x: 50, y: 50 };
+    setPositions((current) => ({ ...current, [playerId]: nextPosition }));
+  };
+
+  const removeStarter = (playerId: string) => {
+    setPositions((current) => {
+      const next = { ...current };
+      delete next[playerId];
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -241,20 +286,23 @@ export function PizarraTactica({ equipo, clubId, role }: PizarraTacticaProps) {
             <rect x="120" y={FIELD_HEIGHT - 100} width={FIELD_WIDTH - 240} height="80" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
 
             {/* Jugadores */}
-            {activePlayers.map((p) => {
-              const pos = positions[p.key];
+            {starters.map((player) => {
+              const pos = positions[player.id];
               const x = (pos.x / 100) * FIELD_WIDTH;
               const y = (pos.y / 100) * FIELD_HEIGHT;
               return (
                 <g
-                  key={p.key}
+                  key={player.id}
                   transform={`translate(${x}, ${y})`}
                   style={{ cursor: canEdit ? "grab" : "default" }}
-                  onMouseDown={() => handleMouseDown(p.key)}
+                  onMouseDown={() => handleMouseDown(player.id)}
                 >
-                  <circle r="20" fill={p.color} stroke="white" strokeWidth="2" opacity={0.95} />
+                  <circle r="22" fill={playerColor(player.posicion)} stroke="white" strokeWidth="2" opacity={0.95} />
                   <text y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-                    {p.label}
+                    {player.dorsal ?? player.nombre.slice(0, 2).toUpperCase()}
+                  </text>
+                  <text y="38" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
+                    {(player.apodo || player.nombre.split(" ")[0]).slice(0, 12)}
                   </text>
                 </g>
               );
@@ -263,10 +311,38 @@ export function PizarraTactica({ equipo, clubId, role }: PizarraTacticaProps) {
         </Card>
 
         <Card className="glass-panel p-6">
-          <h2 className="text-lg font-display font-semibold mb-4">Instrucciones</h2>
+          <h2 className="text-lg font-display font-semibold mb-4">Alineación ({starters.length}/11)</h2>
           <p className="text-sm text-white/60 mb-4">
-            Arrastra los círculos sobre la cancha para ajustar la posición de cada jugador. Selecciona una formación base (4-3-3 o 4-4-2) y guarda tu propia alineación.
+            Elige titulares del roster y arrástralos sobre la cancha. Selecciona una formación base y guarda la alineación del equipo.
           </p>
+
+          {roster.length === 0 && (
+            <p className="mb-5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-300">
+              Agrega alumnos al roster antes de crear una alineación.
+            </p>
+          )}
+
+          <div className="mb-6 space-y-2">
+            {starters.map((player) => (
+              <div key={player.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                <span><strong className="mr-2 text-pitch-400">{player.dorsal ?? "—"}</strong>{player.nombre}</span>
+                {canEdit && <button type="button" aria-label={`Mandar a la banca a ${player.nombre}`} onClick={() => removeStarter(player.id)} className="text-white/45 hover:text-red-400"><UserMinus className="h-4 w-4" /></button>}
+              </div>
+            ))}
+          </div>
+
+          {substitutes.length > 0 && (
+            <div className="mb-6 border-t border-white/10 pt-4">
+              <h3 className="mb-2 text-sm font-medium text-white">Reservas</h3>
+              <div className="space-y-2">
+                {substitutes.map((player) => (
+                  <button key={player.id} type="button" disabled={!canEdit || starters.length >= 11} onClick={() => addStarter(player.id)} className="flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-left text-sm text-white/65 hover:bg-white/5 disabled:opacity-40">
+                    <span><strong className="mr-2">{player.dorsal ?? "—"}</strong>{player.nombre}</span><UserPlus className="h-4 w-4" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2 mb-6">
             <div className="flex items-center gap-2 text-sm text-white/60">
@@ -293,8 +369,7 @@ export function PizarraTactica({ equipo, clubId, role }: PizarraTacticaProps) {
                   <button
                     key={f.id}
                     onClick={() => {
-                      setPositions(f.esquema);
-                      setFormationName(f.nombre);
+                      setPositions(normalizeSavedFormation(f.esquema, roster));
                     }}
                     className="w-full text-left p-3 rounded-xl bg-white/5 border border-white/10 hover:border-pitch-400/30 text-sm"
                   >

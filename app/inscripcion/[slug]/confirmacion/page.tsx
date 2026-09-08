@@ -10,13 +10,14 @@ import QRCode from "qrcode";
 
 export const dynamic = "force-dynamic";
 
-export default async function ConfirmacionPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams?: { session_id?: string; solicitud?: string; cancelado?: string };
-}) {
+export default async function ConfirmacionPage(
+  props: {
+    params: Promise<{ slug: string }>;
+    searchParams?: Promise<{ session_id?: string; solicitud?: string; cancelado?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   if (!esClubEvento(params.slug)) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">

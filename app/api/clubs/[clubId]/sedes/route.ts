@@ -20,10 +20,8 @@ const schema = z.object({
     .or(z.literal("")),
 });
 
-export async function POST(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 

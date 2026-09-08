@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { confirmarPagoEvento } from "@/lib/evento-inscripcion";
 import Stripe from "stripe";
+import { recordMonthlyPayment } from "@/lib/payments";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2023-10-16",
@@ -61,33 +62,12 @@ export async function POST(req: Request) {
       // Las mensualidades se confirman con los eventos de pago originales;
       // checkout.session.completed solo aplica al flujo del evento (solicitudId).
       if (mensualidadId && event.type !== "checkout.session.completed") {
-        const mensualidad = await db.mensualidad.findUnique({ where: { id: mensualidadId } });
-        const pagoExistente = await db.pago.findFirst({
-          where: { proveedor: "stripe", proveedorId: payment.id },
+        await recordMonthlyPayment({
+          mensualidadId,
+          metodoPago: "Stripe",
+          proveedor: "stripe",
+          proveedorId: payment.id,
         });
-
-        if (mensualidad && !pagoExistente) {
-          await db.$transaction([
-            db.mensualidad.update({
-              where: { id: mensualidadId },
-              data: {
-                estado: "PAGADO",
-                fechaPago: new Date(),
-                metodoPago: "Stripe",
-                referenciaPago: payment.id,
-              },
-            }),
-            db.pago.create({
-              data: {
-                mensualidadId,
-                monto: mensualidad.monto,
-                metodoPago: "Stripe",
-                proveedor: "stripe",
-                proveedorId: payment.id,
-              },
-            }),
-          ]);
-        }
       }
     }
 

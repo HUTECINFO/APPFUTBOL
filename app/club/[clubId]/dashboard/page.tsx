@@ -4,14 +4,17 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { DashboardView } from "@/components/club/dashboard-view";
 import { toClientData } from "@/lib/serialize";
+import { actorFromSession, canAccessClub } from "@/lib/authorization";
 
-export default async function ClubDashboardPage({
-  params,
-}: {
-  params: { clubId: string };
-}) {
+export default async function ClubDashboardPage(
+  props: {
+    params: Promise<{ clubId: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!(await canAccessClub(actorFromSession(session), params.clubId))) redirect("/unauthorized");
   const teamWhere = session.user.role === "ENTRENADOR"
     ? { entrenadorId: session.user.id }
     : undefined;

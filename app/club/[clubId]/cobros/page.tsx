@@ -4,15 +4,17 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CobrosView } from "@/components/cobros/cobros-view";
 import { toClientData } from "@/lib/serialize";
+import { actorFromSession, canManageClub } from "@/lib/authorization";
 
-export default async function CobrosPage({
-  params,
-}: {
-  params: { clubId: string };
-}) {
+export default async function CobrosPage(
+  props: {
+    params: Promise<{ clubId: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (!["SUPER_ADMIN", "CLUB_ADMIN"].includes(session.user.role)) redirect("/unauthorized");
+  if (!(await canManageClub(actorFromSession(session), params.clubId))) redirect("/unauthorized");
 
   const club = await db.club.findUnique({
     where: { id: params.clubId },

@@ -22,8 +22,9 @@ const patchSchema = z.object({
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { clubId: string; sedeId: string } }
+  props: { params: Promise<{ clubId: string; sedeId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
@@ -58,8 +59,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { clubId: string; sedeId: string } }
+  props: { params: Promise<{ clubId: string; sedeId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 

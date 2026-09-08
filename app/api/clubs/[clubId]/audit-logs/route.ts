@@ -4,10 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { actorFromSession, canManageClub } from "@/lib/authorization";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { clubId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 

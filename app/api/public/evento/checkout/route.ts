@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { EVENTO_TOUR } from "@/lib/evento-tour";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { requestOrigin } from "@/lib/request-origin";
 
 const schema = z.object({ solicitudId: z.string().min(1) });
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "La sede alcanzó su cupo de 60 porteros", listaEspera: true }, { status: 409 });
     }
 
-    const origin = new URL(req.url).origin;
+    const origin = requestOrigin(req);
     const secretKey = process.env.STRIPE_SECRET_KEY;
 
     if (!secretKey) {

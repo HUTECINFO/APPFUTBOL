@@ -7,13 +7,18 @@ import { ClubHeader } from "@/components/layout/club-header";
 import { brandCssVariables } from "@/lib/theme";
 import { esClubEvento } from "@/lib/evento-tour";
 
-export default async function ClubLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: { clubId?: string };
-}) {
+export default async function ClubLayout(
+  props: {
+    children: React.ReactNode;
+    params: Promise<{ clubId?: string }>;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const session = await getServerSession(authOptions);
 
   if (!session) redirect("/login");

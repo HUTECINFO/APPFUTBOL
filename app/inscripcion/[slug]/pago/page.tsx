@@ -4,13 +4,14 @@ import { esClubEvento, EVENTO_TOUR, formatUsd } from "@/lib/evento-tour";
 import { PagoPruebaForm } from "@/components/inscripcion/pago-prueba-form";
 import { CreditCard, Goal, MapPin, ShieldCheck } from "lucide-react";
 
-export default async function PagoPruebaPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams?: { solicitud?: string };
-}) {
+export default async function PagoPruebaPage(
+  props: {
+    params: Promise<{ slug: string }>;
+    searchParams?: Promise<{ solicitud?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   if (!esClubEvento(params.slug)) redirect(`/inscripcion/${params.slug}`);
 
   // Con Stripe configurado el pago real ocurre en Stripe Checkout.

@@ -5,17 +5,18 @@ import { db } from "@/lib/db";
 import { esClubEvento, EVENTO_TOUR } from "@/lib/evento-tour";
 import { EventoDashboardView } from "@/components/club/evento-dashboard-view";
 import { toClientData } from "@/lib/serialize";
+import { actorFromSession, canManageClub } from "@/lib/authorization";
 
-export default async function EventoDashboardPage({
-  params,
-}: {
-  params: { clubId: string };
-}) {
+export default async function EventoDashboardPage(
+  props: {
+    params: Promise<{ clubId: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const isAdmin = ["SUPER_ADMIN", "CLUB_ADMIN"].includes(session.user.role);
-  if (!isAdmin) redirect("/unauthorized");
+  if (!(await canManageClub(actorFromSession(session), params.clubId))) redirect("/unauthorized");
 
   const club = await db.club.findUnique({
     where: { id: params.clubId },

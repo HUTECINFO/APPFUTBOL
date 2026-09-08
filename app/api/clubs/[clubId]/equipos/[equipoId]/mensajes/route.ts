@@ -11,8 +11,9 @@ const schema = z.object({
 
 export async function GET(
   req: Request,
-  { params }: { params: { clubId: string; equipoId: string } }
+  props: { params: Promise<{ clubId: string; equipoId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   if (!(await canAccessTeam(actorFromSession(session), params.clubId, params.equipoId))) {
@@ -31,8 +32,9 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { clubId: string; equipoId: string } }
+  props: { params: Promise<{ clubId: string; equipoId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   if (!(await canAccessTeam(actorFromSession(session), params.clubId, params.equipoId))) {

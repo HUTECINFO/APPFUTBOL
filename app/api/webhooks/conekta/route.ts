@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verify } from "crypto";
+import { recordMonthlyPayment } from "@/lib/payments";
 
 export async function POST(req: Request) {
   try {
@@ -37,32 +38,13 @@ export async function POST(req: Request) {
       const reference = body.data?.object?.id;
 
       if (mensualidadId) {
-        const mensualidad = await db.mensualidad.findUnique({ where: { id: mensualidadId } });
-        const pagoExistente = reference
-          ? await db.pago.findFirst({ where: { proveedor: "conekta", proveedorId: reference } })
-          : null;
-
-        if (mensualidad && !pagoExistente) {
-          await db.$transaction([
-            db.mensualidad.update({
-              where: { id: mensualidadId },
-              data: {
-                estado: "PAGADO",
-                fechaPago: new Date(),
-                metodoPago: "Conekta",
-                referenciaPago: reference,
-              },
-            }),
-            db.pago.create({
-              data: {
-                mensualidadId,
-                monto: mensualidad.monto,
-                metodoPago: "Conekta",
-                proveedor: "conekta",
-                proveedorId: reference,
-              },
-            }),
-          ]);
+        if (reference) {
+          await recordMonthlyPayment({
+            mensualidadId,
+            metodoPago: "Conekta",
+            proveedor: "conekta",
+            proveedorId: reference,
+          });
         }
       }
     }

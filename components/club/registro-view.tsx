@@ -29,6 +29,7 @@ import {
   Link as LinkIcon,
   Copy,
   CheckCircle2,
+  KeyRound,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -93,6 +94,8 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
   const [action, setAction] = useState<"approve" | "reject" | "waitlist" | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [activationLink, setActivationLink] = useState("");
+  const [activationLoadingId, setActivationLoadingId] = useState<string | null>(null);
   const [reviewForm, setReviewForm] = useState({
     equipoId: "",
     posicion: "",
@@ -148,6 +151,11 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
     });
 
     if (res.ok) {
+      const data = await res.json();
+      if (data.activationUrl) {
+        setActivationLink(data.activationUrl);
+        await navigator.clipboard.writeText(data.activationUrl).catch(() => undefined);
+      }
       setReviewing(null);
       setAction(null);
       router.refresh();
@@ -157,6 +165,25 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
     }
 
     setLoading(false);
+  };
+
+  const copyActivationLink = async (solicitudId: string) => {
+    setActivationLoadingId(solicitudId);
+    try {
+      const response = await fetch(`/api/clubs/${club.id}/solicitudes/${solicitudId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "activation_link" }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "No se pudo crear el enlace");
+      setActivationLink(data.activationUrl);
+      await navigator.clipboard.writeText(data.activationUrl).catch(() => undefined);
+    } catch (requestError) {
+      alert(requestError instanceof Error ? requestError.message : "No se pudo crear el enlace");
+    } finally {
+      setActivationLoadingId(null);
+    }
   };
 
   return (
@@ -180,6 +207,20 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
         <Copy className="w-4 h-4 shrink-0" />
         <span className="truncate">{publicUrl}</span>
       </Card>
+
+      {activationLink && (
+        <Card className="border border-pitch-500/20 bg-pitch-500/10 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-pitch-300">Acceso del tutor listo y copiado</p>
+              <p className="truncate text-xs text-white/50">{activationLink}</p>
+            </div>
+            <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(activationLink)}>
+              <Copy className="mr-2 h-4 w-4" /> Copiar de nuevo
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {filtros.map((f) => (
@@ -280,6 +321,18 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
                       <X className="w-4 h-4 mr-1" /> Rechazar
                     </Button>
                   </div>
+                )}
+                {s.estado === "APROBADA" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={activationLoadingId === s.id}
+                    onClick={() => copyActivationLink(s.id)}
+                    className="mt-auto border-pitch-500/30 text-pitch-400 hover:bg-pitch-500/10"
+                  >
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    {activationLoadingId === s.id ? "Generando..." : "Copiar acceso del tutor"}
+                  </Button>
                 )}
               </Card>
             </motion.div>

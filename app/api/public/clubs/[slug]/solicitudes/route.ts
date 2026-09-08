@@ -11,7 +11,12 @@ const schema = z.object({
   categoriaNacimiento: z.string().max(50).optional(),
   clubActual: z.string().max(150).optional(),
   anosPortero: z.number().int().min(0).max(30).optional(),
-  nivel: z.enum(["PRINCIPIANTE", "INTERMEDIO", "AVANZADO"]).optional(),
+  // The regular club form does not use the tour-only level field and sends it
+  // as an empty string. Normalize that value before validating the event enum.
+  nivel: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.enum(["PRINCIPIANTE", "INTERMEDIO", "AVANZADO"]).optional()
+  ),
   tallaJersey: z.string().max(10).optional(),
   tallaGuantes: z.string().max(10).optional(),
   ciudadResidencia: z.string().max(150).optional(),
@@ -38,10 +43,8 @@ const schema = z.object({
   }),
 });
 
-export async function POST(
-  req: Request,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const club = await db.club.findUnique({
       where: { slug: params.slug },

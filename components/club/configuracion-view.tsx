@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Palette, Building2, Coins, Eye, ClipboardList } from "lucide-react";
+import { Save, Palette, Building2, Coins, Eye, ClipboardList, CreditCard, ExternalLink } from "lucide-react";
 import { hexToHsl, hslString, brandCssVariables } from "@/lib/theme";
 import { formatDateTime } from "@/lib/utils";
 
@@ -34,8 +34,42 @@ export function ConfiguracionView({ club, role }: ConfiguracionViewProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [subscription, setSubscription] = useState<{
+    configured: boolean;
+    amountMxn?: number;
+    customer?: boolean;
+    status?: string;
+    currentPeriodEnd?: string | null;
+    cancelAtPeriodEnd?: boolean;
+    error?: string;
+  } | null>(null);
 
   const isAdmin = role === "SUPER_ADMIN" || role === "CLUB_ADMIN";
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch(`/api/clubs/${club.id}/subscription/status`)
+      .then(async (response) => {
+        const data = await response.json();
+        setSubscription(data);
+      })
+      .catch(() => setSubscription({ configured: false, error: "No se pudo consultar Stripe" }));
+  }, [club.id, isAdmin]);
+
+  const openBilling = async (action: "checkout" | "portal") => {
+    setBillingLoading(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/clubs/${club.id}/subscription/${action}`, { method: "POST" });
+      const data = await response.json();
+      if (!response.ok || !data.url) throw new Error(data.error || "No se pudo abrir Stripe");
+      window.location.assign(data.url);
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message || "No se pudo abrir Stripe" });
+      setBillingLoading(false);
+    }
+  };
 
   const loadLogs = async () => {
     setLogsLoading(true);
@@ -264,7 +298,51 @@ export function ConfiguracionView({ club, role }: ConfiguracionViewProps) {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
           >
+            <Card className="glass-panel p-6">
+              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-xl border border-pitch-500/20 bg-pitch-500/10 p-3 text-pitch-400">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-display text-xl font-semibold text-white">Suscripción Club One</p>
+                    <p className="mt-1 text-sm text-white/55">$1,200 MXN al mes por club</p>
+                    <p className="mt-2 text-xs text-white/45">
+                      Estado: {subscription === null
+                        ? "consultando..."
+                        : subscription.configured
+                          ? subscription.status === "active"
+                            ? "activa"
+                            : subscription.status === "trialing"
+                              ? "periodo de prueba"
+                              : subscription.status === "past_due"
+                                ? "pago pendiente"
+                                : subscription.status === "canceled"
+                                  ? "cancelada"
+                                  : "inactiva"
+                          : "Stripe no disponible"}
+                    </p>
+                    {subscription?.currentPeriodEnd && ["active", "trialing", "past_due"].includes(subscription.status || "") && (
+                      <p className="mt-1 text-xs text-white/45">
+                        {subscription.cancelAtPeriodEnd ? "Finaliza" : "Próxima renovación"}: {formatDateTime(subscription.currentPeriodEnd)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {subscription?.customer ? (
+                  <Button type="button" variant="outline" disabled={billingLoading} onClick={() => openBilling("portal")}>
+                    Administrar facturación <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="button" disabled={billingLoading || subscription === null || subscription?.configured === false} onClick={() => openBilling("checkout")} className="bg-pitch-500 text-dark-900 hover:bg-pitch-400">
+                    {billingLoading ? "Abriendo Stripe..." : "Activar suscripción"}
+                  </Button>
+                )}
+              </div>
+              {subscription?.error && <p className="mt-4 text-sm text-red-400">{subscription.error}</p>}
+            </Card>
             <Card className="glass-panel p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
