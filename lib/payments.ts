@@ -23,6 +23,10 @@ export async function recordMonthlyPayment(params: {
 
   const mensualidad = await db.mensualidad.findUnique({ where: { id: params.mensualidadId } });
   if (!mensualidad) throw new Error("Mensualidad no encontrada");
+  // Stripe can emit checkout.session.completed and payment_intent.succeeded
+  // for the same checkout. Avoid a second payment row in the fallback path
+  // while the atomic Supabase RPC migration is being rolled out.
+  if (mensualidad.estado === "PAGADO") return mensualidad;
   const existing = await db.pago.findFirst({
     where: { proveedor: params.proveedor, proveedorId: params.proveedorId },
   });

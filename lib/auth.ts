@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         const { data: user, error } = await supabaseAdmin
           .from("usuarios")
           .select("id, email, nombre, image, password, activo, rol")
-          .eq("email", credentials.email.toLowerCase())
+          .eq("email", credentials.email.trim().toLowerCase())
           .maybeSingle();
 
         if (error || !user || !user.password || !user.activo) return null;

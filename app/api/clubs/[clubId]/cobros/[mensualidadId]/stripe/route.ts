@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import Stripe from "stripe";
-import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { actorFromSession, canManageClub } from "@/lib/authorization";
 import { requestOrigin } from "@/lib/request-origin";
 
-const schema = z.object({ mensualidadId: z.string().min(1) });
-
-export async function POST(req: Request) {
+/**
+ * Creates a one-time Stripe Checkout link for a club administrator to send
+ * to the tutor. The tutor does not need to be logged in to pay this link.
+ */
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ clubId: string; mensualidadId: string }> }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  if (!(await canManageClub(actorFromSession(session), params.clubId))) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
 
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
@@ -18,18 +28,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { mensualidadId } = schema.parse(await req.json());
     const mensualidad = await db.mensualidad.findFirst({
       where: {
-        id: mensualidadId,
+        id: params.mensualidadId,
         estado: { in: ["PENDIENTE", "VENCIDO"] },
-        jugador: {
-          OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
-        },
+        jugador: { equipo: { clubId: params.clubId } },
       },
       include: {
         jugador: {
           include: {
+            tutor: { select: { email: true } },
             equipo: { include: { club: { select: { nombre: true, porcentajePlataforma: true } } } },
           },
         },
@@ -37,7 +45,7 @@ export async function POST(req: Request) {
     });
 
     if (!mensualidad) {
-      return NextResponse.json({ error: "Mensualidad no encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Mensualidad no encontrada o ya pagada" }, { status: 404 });
     }
 
     const stripe = new Stripe(secretKey, { apiVersion: "2023-10-16" });
@@ -45,7 +53,7 @@ export async function POST(req: Request) {
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
       client_reference_id: mensualidad.id,
-      customer_email: session.user.email || undefined,
+      customer_email: mensualidad.jugador.tutor?.email || undefined,
       line_items: [
         {
           quantity: 1,
@@ -62,25 +70,25 @@ export async function POST(req: Request) {
       payment_intent_data: {
         metadata: {
           mensualidadId: mensualidad.id,
+          clubId: params.clubId,
           montoMensualidadMxn: String(mensualidad.monto),
           porcentajePlataforma: String(mensualidad.jugador.equipo.club.porcentajePlataforma ?? 0),
         },
-        receipt_email: session.user.email || undefined,
+        receipt_email: mensualidad.jugador.tutor?.email || undefined,
       },
       metadata: {
         mensualidadId: mensualidad.id,
+        clubId: params.clubId,
         montoMensualidadMxn: String(mensualidad.monto),
         porcentajePlataforma: String(mensualidad.jugador.equipo.club.porcentajePlataforma ?? 0),
       },
-      success_url: `${origin}/app/pagos?resultado=exitoso`,
-      cancel_url: `${origin}/app/pagos?resultado=cancelado`,
+      success_url: `${origin}/club/${params.clubId}/cobros?pago=exitoso`,
+      cancel_url: `${origin}/club/${params.clubId}/cobros?pago=cancelado`,
     });
 
     return NextResponse.json({ url: checkout.url });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Solicitud de pago inválida" }, { status: 400 });
-    }
-    return NextResponse.json({ error: "No se pudo iniciar el pago" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Error creando checkout de mensualidad", error);
+    return NextResponse.json({ error: "No se pudo generar el link de pago" }, { status: 500 });
   }
 }

@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, DollarSign, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { CreditCard, DollarSign, AlertCircle, CheckCircle, Copy } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface CobrosViewProps {
@@ -34,10 +34,12 @@ export function CobrosView({ club, mensualidades, role }: CobrosViewProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stripeLoadingId, setStripeLoadingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [form, setForm] = useState({
     jugadorId: "",
     periodo: "",
-    monto: "",
+    monto: club.feeMensual && Number(club.feeMensual) > 0 ? Number(club.feeMensual).toString() : "1200",
   });
 
   const canEdit = ["SUPER_ADMIN", "CLUB_ADMIN"].includes(role);
@@ -68,7 +70,7 @@ export function CobrosView({ club, mensualidades, role }: CobrosViewProps) {
 
     if (res.ok) {
       setOpen(false);
-      setForm({ jugadorId: "", periodo: "", monto: "" });
+      setForm({ jugadorId: "", periodo: "", monto: club.feeMensual && Number(club.feeMensual) > 0 ? Number(club.feeMensual).toString() : "1200" });
       router.refresh();
     } else {
       const data = await res.json();
@@ -93,12 +95,45 @@ export function CobrosView({ club, mensualidades, role }: CobrosViewProps) {
     }
   };
 
+  const handleStripeLink = async (mensualidadId: string) => {
+    setStripeLoadingId(mensualidadId);
+    setCopiedId(null);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/cobros/${mensualidadId}/stripe`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || "No se pudo generar el link de pago");
+
+      try {
+        await navigator.clipboard.writeText(data.url);
+      } catch {
+        const input = document.createElement("textarea");
+        input.value = data.url;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+      setCopiedId(mensualidadId);
+      window.setTimeout(() => setCopiedId((current) => current === mensualidadId ? null : current), 4000);
+    } catch (error: any) {
+      alert(error.message || "No se pudo generar el link de pago");
+    } finally {
+      setStripeLoadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold">Cobros</h1>
           <p className="text-white/60">{club.nombre}</p>
+          <p className="mt-2 max-w-2xl text-sm text-white/50">
+            Crea la mensualidad (por defecto $1,200 MXN), usa <span className="text-gold-400">Copiar link Stripe</span> y envíaselo al tutor por WhatsApp o correo. El tutor paga sin iniciar sesión; si activa su cuenta también verá el adeudo en <span className="text-white/70">Pagos</span>.
+          </p>
         </div>
         {canEdit && (
           <Dialog open={open} onOpenChange={setOpen}>
@@ -229,6 +264,17 @@ export function CobrosView({ club, mensualidades, role }: CobrosViewProps) {
                   <td className="px-6 py-4">
                     {m.estado !== "PAGADO" && canEdit && (
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-pitch-500/30 text-pitch-400 hover:bg-pitch-500/10"
+                          onClick={() => handleStripeLink(m.id)}
+                          disabled={stripeLoadingId === m.id}
+                          title="Genera un link de Stripe para enviárselo al tutor"
+                        >
+                          {copiedId === m.id ? <CheckCircle className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                          {stripeLoadingId === m.id ? "Generando..." : copiedId === m.id ? "Link copiado" : "Copiar link Stripe"}
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

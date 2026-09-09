@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError("");
 
     const result = await signIn("credentials", {
-      email,
+      email: email.trim().toLowerCase(),
       password,
       redirect: false,
     });
@@ -92,6 +92,7 @@ export default function LoginPage() {
           <Button type="submit" className="w-full bg-pitch-500 hover:bg-pitch-400 text-dark-900 font-semibold" disabled={loading}>
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </Button>
+          <p className="text-center text-xs text-white/40">Los tutores entran con el correo registrado y la contraseña que crean en su enlace de activación.</p>
         </form>
 
         <div className="mt-6 text-center text-sm text-white/50">

@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function ActivarCuentaForm({ token }: { token: string }) {
+export function ActivarCuentaForm({ token, email }: { token: string; email: string }) {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
@@ -31,6 +34,12 @@ export function ActivarCuentaForm({ token }: { token: string }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo activar la cuenta");
+      const login = await signIn("credentials", { email, password, redirect: false });
+      if (login?.ok) {
+        router.push("/app/inicio");
+        router.refresh();
+        return;
+      }
       setReady(true);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No se pudo activar la cuenta");
@@ -44,7 +53,7 @@ export function ActivarCuentaForm({ token }: { token: string }) {
       <div className="text-center">
         <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-pitch-400" />
         <h1 className="font-display text-2xl font-bold">Tu acceso está listo</h1>
-        <p className="mt-2 text-sm text-white/60">Ya puedes consultar el calendario, pagos y datos del jugador.</p>
+        <p className="mt-2 text-sm text-white/60">Tu usuario es <span className="font-medium text-white">{email}</span>. Ya puedes consultar el calendario, pagos y datos del jugador.</p>
         <Button asChild className="mt-6 w-full bg-pitch-500 font-semibold text-dark-900 hover:bg-pitch-400">
           <Link href="/login">Iniciar sesión</Link>
         </Button>
@@ -58,6 +67,7 @@ export function ActivarCuentaForm({ token }: { token: string }) {
         <KeyRound className="mx-auto mb-4 h-10 w-10 text-pitch-400" />
         <h1 className="font-display text-2xl font-bold">Activa tu cuenta</h1>
         <p className="mt-2 text-sm text-white/60">Crea una contraseña para acceder como tutor.</p>
+        {email && <p className="mt-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70">Tu correo de acceso: <span className="font-medium text-white">{email}</span></p>}
       </div>
 
       {error && <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}

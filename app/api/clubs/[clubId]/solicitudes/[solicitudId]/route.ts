@@ -53,7 +53,7 @@ export async function PATCH(
       });
       if (!tutor) return NextResponse.json({ error: "Cuenta del tutor no encontrada" }, { status: 404 });
       if (tutor.password) {
-        return NextResponse.json({ error: "El tutor ya activó su cuenta" }, { status: 409 });
+        return NextResponse.json({ error: `La cuenta ${tutor.email} ya está activada. Debe iniciar sesión con ese correo.` }, { status: 409 });
       }
       const token = createAccountActivationToken(tutor.id, tutor.email);
       const activationUrl = `${requestOrigin(req)}/activar-cuenta?token=${encodeURIComponent(token)}`;

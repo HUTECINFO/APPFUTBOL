@@ -59,9 +59,9 @@ export async function POST(req: Request) {
 
       const mensualidadId = payment.metadata?.mensualidadId;
 
-      // Las mensualidades se confirman con los eventos de pago originales;
-      // checkout.session.completed solo aplica al flujo del evento (solicitudId).
-      if (mensualidadId && event.type !== "checkout.session.completed") {
+      // Confirmamos también desde checkout.session.completed cuando el pago
+      // ya quedó liquidado. El helper es idempotente por mensualidad/proveedor.
+      if (mensualidadId && (event.type !== "checkout.session.completed" || payment.payment_status === "paid")) {
         await recordMonthlyPayment({
           mensualidadId,
           metodoPago: "Stripe",
