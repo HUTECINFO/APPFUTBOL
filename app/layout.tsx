@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora, Oswald } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { CLUB_ONE_FAVICON_URL } from "@/lib/brand-assets";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -23,10 +24,10 @@ export const metadata: Metadata = {
     "Club One presenta el USA Goalkeeper Tour 2026: cuatro clínicas de élite para porteros en Texas.",
   keywords: ["porteros", "goalkeeper", "fútbol", "Texas", "clínica", "Club One"],
   authors: [{ name: "Club One" }],
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: CLUB_ONE_FAVICON_URL,
+    apple: CLUB_ONE_FAVICON_URL,
   },
 };
 
