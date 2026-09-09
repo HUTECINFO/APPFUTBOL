@@ -18,6 +18,7 @@ import {
   Goal,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { ClubOneMark } from "@/components/branding/club-one-mark";
 
 const navItems = (clubId: string, role: string, esEvento: boolean) => [
   { href: `/club/${clubId}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
@@ -49,7 +50,8 @@ export function ClubSidebar({ clubNombre, role, esEvento = false }: { clubNombre
   return (
     <aside className="hidden lg:flex w-64 flex-col glass-panel h-screen sticky top-0 border-r border-white/10">
       <div className="p-6 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-3">
+          <ClubOneMark className="h-9 w-9" priority />
           <span className="text-xl font-display font-bold text-gradient">Club One</span>
         </Link>
         <p className="mt-2 text-sm text-white/60 truncate">{clubNombre}</p>

@@ -1,6 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0A0E14" rx="96"/>
-  <circle cx="256" cy="256" r="160" fill="none" stroke="#1FCB6B" stroke-width="24"/>
-  <path d="M160 256 L220 196 L220 316 Z" fill="#F2B33D"/>
-  <circle cx="340" cy="256" r="40" fill="#1FCB6B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Club One">
+  <defs>
+    <linearGradient id="pitch" x1="104" y1="78" x2="410" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38E88A"/>
+      <stop offset="1" stop-color="#0FA85B"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="175" y1="125" x2="342" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#E9A42D"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="#0A0E14"/>
+  <rect x="22" y="22" width="468" height="468" rx="102" fill="#111B28" stroke="#38E88A" stroke-opacity=".4" stroke-width="12"/>
+  <!-- Goal frame: the protected area. -->
+  <path d="M114 365V139h284v226M114 207h284M169 139v226M343 139v226" fill="none" stroke="#38E88A" stroke-linecap="round" stroke-linejoin="round" stroke-width="18"/>
+  <!-- The One: a goalkeeper's stance expressed as a bold numeral. -->
+  <path d="M250 126h57v211h55v53H194v-53h56V196l-31 27-35-41 66-56Z" fill="#F4C35E"/>
+  <circle cx="140" cy="384" r="11" fill="#F4C35E"/>
+  <circle cx="372" cy="384" r="11" fill="#F4C35E"/>
 </svg>

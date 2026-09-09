@@ -82,7 +82,7 @@ export default async function ClubLayout(
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--one" />
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--two" />
       {club && <ClubSidebar clubNombre={club.nombre} role={role} esEvento={esClubEvento(club.slug)} />}
-      <div className="relative z-10 flex-1 flex flex-col min-h-screen">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col min-h-screen">
         <ClubHeader />
         <main id="contenido-principal" className="page-enter flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>

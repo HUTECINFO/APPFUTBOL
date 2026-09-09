@@ -206,9 +206,9 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
         </Button>
       </div>
 
-      <Card className="glass-card p-4 flex items-center gap-3 text-sm text-white/60">
+      <Card className="glass-card flex items-center gap-3 p-4 text-sm text-white/60">
         <Copy className="w-4 h-4 shrink-0" />
-        <span className="truncate">{publicUrl}</span>
+        <span className="min-w-0 flex-1 truncate">{publicUrl}</span>
       </Card>
 
       {activationLink && (
@@ -259,10 +259,10 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
           initial="hidden"
           animate="show"
           variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           {filtradas.map((s) => (
-            <motion.div key={s.id} variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}>
+            <motion.div key={s.id} variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }} className="min-w-0">
               <Card className="glass-card p-5 h-full flex flex-col">
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -276,7 +276,7 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
                   </span>
                 </div>
 
-                <div className="text-sm text-white/70 space-y-1 mb-4">
+                <div className="mb-4 space-y-1 break-words text-sm text-white/70">
                   <p>
                     <span className="text-white/40">Equipo:</span> {s.equipo ? `${s.equipo.nombre} (${s.equipo.categoria})` : "Sin asignar"}
                   </p>

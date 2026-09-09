@@ -21,6 +21,7 @@ import {
 import { AnimatedBackground } from "@/components/landing/animated-background";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ClubOneMark } from "@/components/branding/club-one-mark";
 
 const stops = [
   { number: "01", city: "El Paso", date: "19–20 SEP", detail: "19–20 septiembre" },
@@ -56,7 +57,7 @@ export function LandingPage() {
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-white/10 bg-dark-900/80 py-3 backdrop-blur-xl" : "py-5"}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 lg:px-12">
           <Link href="/" className="flex items-center gap-3" aria-label="Club One inicio">
-            <span className="grid h-10 w-10 place-items-center rounded-xl border border-pitch-400/30 bg-pitch-500/15 text-pitch-400"><Goal className="h-5 w-5" /></span>
+            <ClubOneMark className="h-10 w-10" priority />
             <span>
               <span className="block font-display text-lg font-bold leading-none text-white">CLUB <span className="text-gradient">ONE</span></span>
               <span className="mt-1 block text-[9px] font-bold tracking-[0.24em] text-white/40">PRESENTA</span>

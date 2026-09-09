@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { ClubOneMark } from "@/components/branding/club-one-mark";
 
 const mobileNav = (clubId: string) => [
   { href: `/club/${clubId}/dashboard`, label: "Inicio", icon: LayoutDashboard },
@@ -44,7 +45,8 @@ export function ClubHeader() {
   return (
     <header className="sticky top-0 z-40 glass border-b border-white/10">
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div className="text-sm text-white/50 lg:hidden">
+        <div className="flex items-center gap-2 text-sm text-white/50 lg:hidden">
+          <ClubOneMark className="h-7 w-7" priority />
           <span className="font-display text-white font-semibold">Club One</span>
         </div>
 
