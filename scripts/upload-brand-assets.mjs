@@ -31,7 +31,7 @@ if (!existingBucket) {
 }
 
 const assets = [
-  { localPath: "public/Diseño sin título (2).png", remotePath: "club-one-logo.png" },
+  { localPath: "public/Diseño sin título (3).png", remotePath: "club-one-logo.png" },
   { localPath: "public/favicon.png", remotePath: "favicon.png" },
 ];
 

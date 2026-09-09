@@ -5,7 +5,7 @@ const publicBrandAssetsUrl = supabaseUrl
 
 /** URLs públicas de los recursos de marca hospedados en Supabase Storage. */
 export const CLUB_ONE_LOGO_URL = publicBrandAssetsUrl
-  ? `${publicBrandAssetsUrl}/club-one-logo.png`
+  ? `${publicBrandAssetsUrl}/club-one-logo.png?v=20260909-3`
   : "/icon.svg";
 
 export const CLUB_ONE_FAVICON_URL = publicBrandAssetsUrl
