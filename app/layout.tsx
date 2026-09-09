@@ -24,7 +24,10 @@ export const metadata: Metadata = {
   keywords: ["porteros", "goalkeeper", "fútbol", "Texas", "clínica", "Club One"],
   authors: [{ name: "Club One" }],
   manifest: "/manifest.json",
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export const viewport: Viewport = {

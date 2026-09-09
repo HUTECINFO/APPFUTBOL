@@ -9,7 +9,7 @@ type ClubOneMarkProps = {
 export function ClubOneMark({ className, priority = false }: ClubOneMarkProps) {
   return (
     <Image
-      src="/icon.svg"
+      src="/Diseño sin título (2).png"
       alt="Club One"
       width={48}
       height={48}
