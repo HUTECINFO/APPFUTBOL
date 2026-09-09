@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function ActivarCuentaForm({ token, email }: { token: string; email: string }) {
+export function ActivarCuentaForm({ token, email, isReset = false }: { token: string; email: string; isReset?: boolean }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -52,7 +52,7 @@ export function ActivarCuentaForm({ token, email }: { token: string; email: stri
     return (
       <div className="text-center">
         <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-pitch-400" />
-        <h1 className="font-display text-2xl font-bold">Tu acceso está listo</h1>
+        <h1 className="font-display text-2xl font-bold">{isReset ? "Tu contraseña fue actualizada" : "Tu acceso está listo"}</h1>
         <p className="mt-2 text-sm text-white/60">Tu usuario es <span className="font-medium text-white">{email}</span>. Ya puedes consultar el calendario, pagos y datos del jugador.</p>
         <Button asChild className="mt-6 w-full bg-pitch-500 font-semibold text-dark-900 hover:bg-pitch-400">
           <Link href="/login">Iniciar sesión</Link>
@@ -65,15 +65,15 @@ export function ActivarCuentaForm({ token, email }: { token: string; email: stri
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="text-center">
         <KeyRound className="mx-auto mb-4 h-10 w-10 text-pitch-400" />
-        <h1 className="font-display text-2xl font-bold">Activa tu cuenta</h1>
-        <p className="mt-2 text-sm text-white/60">Crea una contraseña para acceder como tutor.</p>
+        <h1 className="font-display text-2xl font-bold">{isReset ? "Restablece tu acceso" : "Activa tu cuenta"}</h1>
+        <p className="mt-2 text-sm text-white/60">{isReset ? "Crea una nueva contraseña para acceder como tutor." : "Crea una contraseña para acceder como tutor."}</p>
         {email && <p className="mt-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70">Tu correo de acceso: <span className="font-medium text-white">{email}</span></p>}
       </div>
 
       {error && <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}
 
       <div className="space-y-2">
-        <Label htmlFor="password">Contraseña</Label>
+        <Label htmlFor="password">{isReset ? "Nueva contraseña" : "Contraseña"}</Label>
         <Input
           id="password"
           type="password"

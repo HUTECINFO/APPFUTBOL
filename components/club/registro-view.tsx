@@ -95,6 +95,7 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activationLink, setActivationLink] = useState("");
+  const [activationMode, setActivationMode] = useState<"activate" | "reset">("activate");
   const [activationLoadingId, setActivationLoadingId] = useState<string | null>(null);
   const [reviewForm, setReviewForm] = useState({
     equipoId: "",
@@ -154,6 +155,7 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
       const data = await res.json();
       if (data.activationUrl) {
         setActivationLink(data.activationUrl);
+        setActivationMode(data.reset ? "reset" : "activate");
         await navigator.clipboard.writeText(data.activationUrl).catch(() => undefined);
       }
       setReviewing(null);
@@ -178,6 +180,7 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo crear el enlace");
       setActivationLink(data.activationUrl);
+      setActivationMode(data.reset ? "reset" : "activate");
       await navigator.clipboard.writeText(data.activationUrl).catch(() => undefined);
     } catch (requestError) {
       alert(requestError instanceof Error ? requestError.message : "No se pudo crear el enlace");
@@ -212,7 +215,7 @@ export function RegistroView({ club, solicitudes }: RegistroViewProps) {
         <Card className="border border-pitch-500/20 bg-pitch-500/10 p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-pitch-300">Acceso del tutor listo y copiado</p>
+              <p className="font-medium text-pitch-300">{activationMode === "reset" ? "Enlace para restablecer acceso listo y copiado" : "Acceso del tutor listo y copiado"}</p>
               <p className="truncate text-xs text-white/50">{activationLink}</p>
             </div>
             <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(activationLink)}>

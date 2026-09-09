@@ -6,6 +6,7 @@ interface ActivationPayload {
   userId: string;
   email: string;
   exp: number;
+  purpose?: "activate" | "reset";
 }
 
 function secret() {
@@ -18,11 +19,12 @@ function sign(value: string) {
   return createHmac("sha256", secret()).update(value).digest("base64url");
 }
 
-export function createAccountActivationToken(userId: string, email: string) {
+export function createAccountActivationToken(userId: string, email: string, purpose: "activate" | "reset" = "activate") {
   const payload: ActivationPayload = {
     userId,
     email: email.toLowerCase(),
     exp: Math.floor(Date.now() / 1000) + ACTIVATION_TTL_SECONDS,
+    purpose,
   };
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   return `${encoded}.${sign(encoded)}`;

@@ -12,7 +12,7 @@ export default async function ActivarCuentaPage({
   return (
     <main id="contenido-principal" className="flex min-h-screen items-center justify-center px-6">
       <Card className="glass-panel w-full max-w-md p-8">
-        <ActivarCuentaForm token={token} email={activation?.email || ""} />
+        <ActivarCuentaForm token={token} email={activation?.email || ""} isReset={activation?.purpose === "reset"} />
       </Card>
     </main>
   );

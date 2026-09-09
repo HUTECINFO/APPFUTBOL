@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     if (!user || user.email.toLowerCase() !== payload.email) {
       return NextResponse.json({ error: "La cuenta ya no está disponible" }, { status: 404 });
     }
-    if (user.password) {
+    if (user.password && payload.purpose !== "reset") {
       return NextResponse.json(
         { error: "La cuenta ya fue activada. Inicia sesión con tu correo." },
         { status: 409 }

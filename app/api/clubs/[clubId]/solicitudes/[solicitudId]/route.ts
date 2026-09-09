@@ -52,12 +52,9 @@ export async function PATCH(
         select: { id: true, email: true, password: true },
       });
       if (!tutor) return NextResponse.json({ error: "Cuenta del tutor no encontrada" }, { status: 404 });
-      if (tutor.password) {
-        return NextResponse.json({ error: `La cuenta ${tutor.email} ya está activada. Debe iniciar sesión con ese correo.` }, { status: 409 });
-      }
-      const token = createAccountActivationToken(tutor.id, tutor.email);
+      const token = createAccountActivationToken(tutor.id, tutor.email, tutor.password ? "reset" : "activate");
       const activationUrl = `${requestOrigin(req)}/activar-cuenta?token=${encodeURIComponent(token)}`;
-      return NextResponse.json({ activationUrl });
+      return NextResponse.json({ activationUrl, reset: Boolean(tutor.password), email: tutor.email });
     }
 
     if (["assign_group", "checkin", "undo_checkin"].includes(data.action)) {
