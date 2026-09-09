@@ -248,6 +248,10 @@ export function AppPerfilView({ usuario, jugadores }: AppPerfilViewProps) {
           <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
         </Button>
       </motion.section>
+
+      <footer className="pb-4 pt-2 text-center text-[10px] uppercase tracking-[0.25em] text-white/30">
+        By HUTEC
+      </footer>
     </div>
   );
 }
