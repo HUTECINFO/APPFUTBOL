@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Users, ArrowRight, Shield } from "lucide-react";
+import { Plus, Users, ArrowRight, Shield, UserPlus, KeyRound, Copy, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 interface EquiposViewProps {
@@ -43,7 +43,37 @@ export function EquiposView({ club, entrenadores, role }: EquiposViewProps) {
     cupoMaximo: "",
   });
 
+  const [coachOpen, setCoachOpen] = useState(false);
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachForm, setCoachForm] = useState({ nombre: "", email: "", telefono: "" });
+  const [coachLink, setCoachLink] = useState("");
+  const [coachCopied, setCoachCopied] = useState(false);
+
   const isAdmin = role === "SUPER_ADMIN" || role === "CLUB_ADMIN";
+
+  const handleCoachSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCoachLoading(true);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/entrenadores`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(coachForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al crear entrenador");
+      if (data.activationUrl) {
+        setCoachLink(data.activationUrl);
+        await navigator.clipboard.writeText(data.activationUrl).catch(() => undefined);
+      }
+      setCoachForm({ nombre: "", email: "", telefono: "" });
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al crear entrenador");
+    } finally {
+      setCoachLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,13 +109,83 @@ export function EquiposView({ club, entrenadores, role }: EquiposViewProps) {
           <p className="text-white/60">{club.nombre}</p>
         </div>
         {isAdmin && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button id="nuevo-equipo" className="bg-pitch-500 hover:bg-pitch-400 text-dark-900 font-semibold">
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo equipo
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={coachOpen} onOpenChange={(v) => { setCoachOpen(v); if (!v) setCoachLink(""); }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-white/10 hover:bg-white/10">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Entrenador
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-panel border-white/10">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-display">Registrar entrenador</DialogTitle>
+                </DialogHeader>
+                {coachLink ? (
+                  <div className="space-y-4 mt-4">
+                    <div className="rounded-xl border border-pitch-500/20 bg-pitch-500/10 p-4">
+                      <p className="flex items-center gap-2 font-medium text-pitch-300">
+                        <CheckCircle2 className="h-4 w-4" /> Entrenador creado
+                      </p>
+                      <p className="mt-2 text-xs text-white/50">Comparte este enlace para que el entrenador active su cuenta:</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <code className="flex-1 truncate rounded-lg bg-dark-900/60 px-3 py-2 text-xs text-pitch-300">{coachLink}</code>
+                        <Button type="button" size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(coachLink); setCoachCopied(true); setTimeout(() => setCoachCopied(false), 2000); }}>
+                          {coachCopied ? <CheckCircle2 className="h-4 w-4 text-pitch-400" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <Button type="button" className="w-full" variant="outline" onClick={() => { setCoachOpen(false); setCoachLink(""); }}>
+                      Cerrar
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCoachSubmit} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>Nombre completo</Label>
+                      <Input
+                        value={coachForm.nombre}
+                        onChange={(e) => setCoachForm({ ...coachForm, nombre: e.target.value })}
+                        placeholder="Nombre del entrenador"
+                        required
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={coachForm.email}
+                        onChange={(e) => setCoachForm({ ...coachForm, email: e.target.value })}
+                        placeholder="entrenador@correo.com"
+                        required
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Teléfono (opcional)</Label>
+                      <Input
+                        value={coachForm.telefono}
+                        onChange={(e) => setCoachForm({ ...coachForm, telefono: e.target.value })}
+                        placeholder="Teléfono"
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-pitch-500 hover:bg-pitch-400 text-dark-900 font-semibold" disabled={coachLoading}>
+                      {coachLoading ? "Creando..." : "Crear entrenador"}
+                    </Button>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button id="nuevo-equipo" className="bg-pitch-500 hover:bg-pitch-400 text-dark-900 font-semibold">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo equipo
+                </Button>
+              </DialogTrigger>
             <DialogContent className="glass-panel border-white/10">
               <DialogHeader>
                 <DialogTitle className="text-xl font-display">Crear equipo</DialogTitle>
@@ -169,6 +269,7 @@ export function EquiposView({ club, entrenadores, role }: EquiposViewProps) {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 
@@ -241,6 +342,28 @@ export function EquiposView({ club, entrenadores, role }: EquiposViewProps) {
             </motion.div>
           ))}
         </motion.div>
+      )}
+
+      {isAdmin && entrenadores.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-display font-semibold">Entrenadores del club</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {entrenadores.map((e) => (
+              <Card key={e.id} className="glass-card p-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pitch-500/10 text-pitch-400 font-display font-bold">
+                  {e.nombre.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-white">{e.nombre}</p>
+                  <p className="truncate text-xs text-white/50">{e.email}</p>
+                </div>
+                <span className="rounded-full border border-pitch-500/20 bg-pitch-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-pitch-400">
+                  Entrenador
+                </span>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
