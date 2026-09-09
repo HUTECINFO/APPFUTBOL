@@ -20,7 +20,17 @@ export default async function CalendarioPage(
     where: { id: params.clubId },
     include: {
       equipos: {
-        where: session.user.role === "ENTRENADOR" ? { entrenadorId: session.user.id } : undefined,
+        where: session.user.role === "ENTRENADOR"
+          ? { entrenadorId: session.user.id }
+          : ["JUGADOR", "TUTOR"].includes(session.user.role)
+            ? {
+                jugadores: {
+                  some: {
+                    OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+                  },
+                },
+              }
+            : undefined,
         include: {
           jugadores: { select: { id: true } },
         },
@@ -35,12 +45,28 @@ export default async function CalendarioPage(
     where: {
       equipo: {
         clubId: params.clubId,
-        ...(session.user.role === "ENTRENADOR" ? { entrenadorId: session.user.id } : {}),
+        ...(session.user.role === "ENTRENADOR"
+          ? { entrenadorId: session.user.id }
+          : ["JUGADOR", "TUTOR"].includes(session.user.role)
+            ? {
+                jugadores: {
+                  some: {
+                    OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+                  },
+                },
+              }
+            : {}),
       },
     },
     orderBy: { fecha: "asc" },
     include: {
-      equipo: { select: { id: true, nombre: true } },
+      equipo: {
+        select: {
+          id: true,
+          nombre: true,
+          jugadores: { select: { id: true, nombre: true } },
+        },
+      },
       sede: { select: { id: true, nombre: true, googleMapsUrl: true } },
       asistencias: {
         include: { jugador: { select: { id: true, nombre: true, dorsal: true } } },
@@ -53,7 +79,16 @@ export default async function CalendarioPage(
       club={toClientData(club)}
       eventos={toClientData(eventos)}
       role={session.user.role}
-      userId={session.user.id}
+      jugadorIds={
+        ["JUGADOR", "TUTOR"].includes(session.user.role)
+          ? (await db.jugador.findMany({
+              where: {
+                OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+              },
+              select: { id: true },
+            })).map((jugador: { id: string }) => jugador.id)
+          : []
+      }
     />
   );
 }

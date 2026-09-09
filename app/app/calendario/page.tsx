@@ -15,20 +15,17 @@ export default async function AppCalendarioPage() {
     select: { id: true, nombre: true, equipoId: true },
   });
 
-  const clubIds = [...new Set(
-    (await Promise.all(
-      jugadores
-        .filter((j: { equipoId: string | null }) => j.equipoId)
-        .map(async (j: { equipoId: string | null }) => {
-          const equipo = await db.equipo.findUnique({ where: { id: j.equipoId! }, select: { clubId: true } });
-          return equipo?.clubId;
-        })
-    )).filter(Boolean) as string[]
-  )];
-
   const eventos = await db.evento.findMany({
-    where: clubIds.length
-      ? { equipo: { clubId: { in: clubIds } } }
+    where: jugadores.length
+      ? {
+          equipo: {
+            jugadores: {
+              some: {
+                OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+              },
+            },
+          },
+        }
       : { id: "never" },
     orderBy: { fecha: "asc" },
     include: {

@@ -72,6 +72,14 @@ export async function POST(req: Request, props: { params: Promise<{ clubId: stri
       if (!sede) return NextResponse.json({ error: "Sede no encontrada" }, { status: 404 });
     }
 
+    // Cada integrante activo recibe su propia invitación pendiente. Esto permite
+    // que el staff vea la lista completa desde el inicio y que cada jugador o
+    // tutor responda solamente por la persona que le corresponde.
+    const jugadores = await db.jugador.findMany({
+      where: { equipoId: data.equipoId, activo: true },
+      select: { id: true },
+    });
+
     const evento = await db.evento.create({
       data: {
         titulo: data.titulo,
@@ -81,6 +89,12 @@ export async function POST(req: Request, props: { params: Promise<{ clubId: stri
         sedeId: data.sedeId || null,
         descripcion: data.descripcion,
         rival: data.rival,
+        asistencias: {
+          create: jugadores.map((jugador: { id: string }) => ({
+            jugadorId: jugador.id,
+            estado: "PENDIENTE",
+          })),
+        },
       },
     });
 

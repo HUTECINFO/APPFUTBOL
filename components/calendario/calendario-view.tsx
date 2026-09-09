@@ -28,13 +28,14 @@ interface CalendarioViewProps {
   club: any;
   eventos: any[];
   role: string;
-  userId: string;
+  jugadorIds: string[];
 }
 
-export function CalendarioView({ club, eventos, role, userId }: CalendarioViewProps) {
+export function CalendarioView({ club, eventos, role, jugadorIds }: CalendarioViewProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState<string | null>(null);
   const [form, setForm] = useState({
     titulo: "",
     tipo: "ENTRENAMIENTO",
@@ -74,19 +75,26 @@ export function CalendarioView({ club, eventos, role, userId }: CalendarioViewPr
   };
 
   const handleRsvp = async (eventoId: string, jugadorId: string, estado: string) => {
-    const res = await fetch(`/api/clubs/${club.id}/eventos/${eventoId}/asistencia`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jugadorId, estado }),
-    });
+    setRsvpLoading(`${eventoId}-${jugadorId}-${estado}`);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/eventos/${eventoId}/asistencia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jugadorId, estado }),
+      });
 
-    if (res.ok) {
-      router.refresh();
-    } else {
-      const data = await res.json();
-      alert(data.error || "Error al confirmar");
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Error al confirmar");
+      }
+    } finally {
+      setRsvpLoading(null);
     }
   };
+
+  const jugadorEsDelUsuario = (jugadorId: string) => jugadorIds.includes(jugadorId);
 
   return (
     <div className="space-y-8">
@@ -195,7 +203,12 @@ export function CalendarioView({ club, eventos, role, userId }: CalendarioViewPr
           }}
           className="space-y-4"
         >
-          {eventos.map((evento) => (
+          {eventos.map((evento) => {
+            const invitados = evento.asistencias.length;
+            const respuestas = evento.asistencias.filter((asistencia: any) => asistencia.estado !== "PENDIENTE").length;
+            const jugadoresDelUsuario = (evento.equipo.jugadores || []).filter((jugador: any) => jugadorEsDelUsuario(jugador.id));
+
+            return (
             <motion.div
               key={evento.id}
               variants={{
@@ -232,30 +245,46 @@ export function CalendarioView({ club, eventos, role, userId }: CalendarioViewPr
                             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {evento.sede.nombre}</span>
                           )
                         )}
-                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {evento.asistencias.length} respuestas</span>
+                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {respuestas}/{invitados} respuestas</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-white/60 mr-2">Asistencia:</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                      onClick={() => handleRsvp(evento.id, evento.equipo.jugadores[0]?.id, "CONFIRMADO")}
-                    >
-                      <Check className="w-4 h-4 mr-1" /> Sí
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                      onClick={() => handleRsvp(evento.id, evento.equipo.jugadores[0]?.id, "RECHAZADO")}
-                    >
-                      <X className="w-4 h-4 mr-1" /> No
-                    </Button>
-                  </div>
+                  {canEdit ? (
+                    <span className="text-sm text-white/50">Invitación enviada a toda la plantilla</span>
+                  ) : jugadoresDelUsuario.length > 0 ? (
+                    <div className="space-y-2">
+                      {jugadoresDelUsuario.map((jugador: any) => {
+                        const asistencia = evento.asistencias.find((item: any) => item.jugadorId === jugador.id);
+                        const estado = asistencia?.estado ?? "PENDIENTE";
+                        const loadingKey = `${evento.id}-${jugador.id}`;
+
+                        return (
+                          <div key={jugador.id} className="flex flex-wrap items-center justify-end gap-2">
+                            <span className="text-sm text-white/60">{jugador.nombre}:</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={rsvpLoading?.startsWith(loadingKey)}
+                              className={estado === "CONFIRMADO" ? "border-green-400 bg-green-500/15 text-green-300" : "border-green-500/30 text-green-400 hover:bg-green-500/10"}
+                              onClick={() => handleRsvp(evento.id, jugador.id, "CONFIRMADO")}
+                            >
+                              <Check className="w-4 h-4 mr-1" /> {rsvpLoading === `${loadingKey}-CONFIRMADO` ? "..." : "Asisto"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={rsvpLoading?.startsWith(loadingKey)}
+                              className={estado === "RECHAZADO" ? "border-red-400 bg-red-500/15 text-red-300" : "border-red-500/30 text-red-400 hover:bg-red-500/10"}
+                              onClick={() => handleRsvp(evento.id, jugador.id, "RECHAZADO")}
+                            >
+                              <X className="w-4 h-4 mr-1" /> {rsvpLoading === `${loadingKey}-RECHAZADO` ? "..." : "No voy"}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
 
                 {evento.asistencias.length > 0 && (
@@ -276,7 +305,8 @@ export function CalendarioView({ club, eventos, role, userId }: CalendarioViewPr
                 )}
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </motion.div>
       )}
     </div>

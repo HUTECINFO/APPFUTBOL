@@ -52,23 +52,26 @@ export function AppCalendarioView({ eventos, jugadores }: AppCalendarioViewProps
     return Array.from(map.entries());
   }, [filtrados]);
 
-  const jugadorDe = (evento: any): JugadorLite | undefined => {
-    const conAsistencia = evento.asistencias?.[0]?.jugador?.id;
-    if (conAsistencia) return jugadores.find((j) => j.id === conAsistencia);
-    return jugadores.find((j) => j.equipoId === evento.equipo.id) || jugadores[0];
-  };
+  const jugadoresDelEvento = (evento: any) =>
+    jugadores.filter((jugador) => jugador.equipoId === evento.equipo.id);
 
-  const handleRsvp = async (evento: any, estado: string) => {
-    const jugador = jugadorDe(evento);
-    if (!jugador) return;
-    setRsvpLoading(`${evento.id}-${estado}`);
-    const res = await fetch(`/api/clubs/${evento.equipo.clubId}/eventos/${evento.id}/asistencia`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jugadorId: jugador.id, estado }),
-    });
-    setRsvpLoading(null);
-    if (res.ok) router.refresh();
+  const handleRsvp = async (evento: any, estado: string, jugador: JugadorLite) => {
+    setRsvpLoading(`${evento.id}-${jugador.id}-${estado}`);
+    try {
+      const res = await fetch(`/api/clubs/${evento.equipo.clubId}/eventos/${evento.id}/asistencia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jugadorId: jugador.id, estado }),
+      });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "No se pudo registrar la asistencia");
+      }
+    } finally {
+      setRsvpLoading(null);
+    }
   };
 
   return (
@@ -116,9 +119,7 @@ export function AppCalendarioView({ eventos, jugadores }: AppCalendarioViewProps
                 const Icon = meta.icon;
                 const fecha = new Date(e.fecha);
                 const pasado = fecha.getTime() < ahora;
-                const asistencia = e.asistencias?.[0];
-                const estadoActual = asistencia?.estado;
-                const jugador = jugadorDe(e);
+                const jugadoresInvitados = jugadoresDelEvento(e);
 
                 return (
                   <motion.div
@@ -178,40 +179,52 @@ export function AppCalendarioView({ eventos, jugadores }: AppCalendarioViewProps
                         )
                       )}
 
-                      {!pasado && jugador && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleRsvp(e, "CONFIRMADO")}
-                            disabled={rsvpLoading !== null}
-                            className={cn(
-                              "flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border text-sm font-bold uppercase tracking-wider transition-all active:scale-95",
-                              estadoActual === "CONFIRMADO"
-                                ? "border-green-400/60 bg-green-500/25 text-green-300"
-                                : "border-green-500/25 bg-green-500/5 text-green-400/80"
-                            )}
-                          >
-                            <Check className="h-4 w-4" />
-                            {rsvpLoading === `${e.id}-CONFIRMADO` ? "..." : "Asisto"}
-                          </button>
-                          <button
-                            onClick={() => handleRsvp(e, "RECHAZADO")}
-                            disabled={rsvpLoading !== null}
-                            className={cn(
-                              "flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border text-sm font-bold uppercase tracking-wider transition-all active:scale-95",
-                              estadoActual === "RECHAZADO"
-                                ? "border-red-400/60 bg-red-500/25 text-red-300"
-                                : "border-red-500/25 bg-red-500/5 text-red-400/80"
-                            )}
-                          >
-                            <X className="h-4 w-4" />
-                            {rsvpLoading === `${e.id}-RECHAZADO` ? "..." : "No voy"}
-                          </button>
+                      {!pasado && jugadoresInvitados.length > 0 && (
+                        <div className="space-y-3">
+                          {jugadoresInvitados.map((jugador) => {
+                            const estadoActual = e.asistencias?.find((asistencia: any) => asistencia.jugador?.id === jugador.id)?.estado ?? "PENDIENTE";
+                            const loadingKey = `${e.id}-${jugador.id}`;
+
+                            return (
+                              <div key={jugador.id}>
+                                {jugadoresInvitados.length > 1 && (
+                                  <p className="mb-1.5 text-xs font-medium text-white/60">Asistencia de {jugador.nombre}</p>
+                                )}
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleRsvp(e, "CONFIRMADO", jugador)}
+                                    disabled={rsvpLoading !== null}
+                                    className={cn(
+                                      "flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border text-sm font-bold uppercase tracking-wider transition-all active:scale-95",
+                                      estadoActual === "CONFIRMADO"
+                                        ? "border-green-400/60 bg-green-500/25 text-green-300"
+                                        : "border-green-500/25 bg-green-500/5 text-green-400/80"
+                                    )}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                    {rsvpLoading === `${loadingKey}-CONFIRMADO` ? "..." : "Asisto"}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRsvp(e, "RECHAZADO", jugador)}
+                                    disabled={rsvpLoading !== null}
+                                    className={cn(
+                                      "flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border text-sm font-bold uppercase tracking-wider transition-all active:scale-95",
+                                      estadoActual === "RECHAZADO"
+                                        ? "border-red-400/60 bg-red-500/25 text-red-300"
+                                        : "border-red-500/25 bg-red-500/5 text-red-400/80"
+                                    )}
+                                  >
+                                    <X className="h-4 w-4" />
+                                    {rsvpLoading === `${loadingKey}-RECHAZADO` ? "..." : "No voy"}
+                                  </button>
+                                </div>
+                                <p className="mt-1.5 text-center text-[10px] uppercase tracking-widest text-white/35">
+                                  {estadoActual === "CONFIRMADO" ? "Confirmado" : estadoActual === "RECHAZADO" ? "No asiste" : "Pendiente de respuesta"}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
-                      {!pasado && estadoActual && (
-                        <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-white/35">
-                          {jugador?.nombre.split(" ")[0]} · {estadoActual === "CONFIRMADO" ? "confirmado" : estadoActual === "RECHAZADO" ? "no asiste" : "pendiente"}
-                        </p>
                       )}
                     </Card>
                   </motion.div>

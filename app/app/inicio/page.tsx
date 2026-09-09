@@ -21,11 +21,18 @@ export default async function AppInicioPage() {
     },
   });
 
-  const clubIds = [...new Set(jugadores.map((j: any) => j.equipo?.clubId).filter(Boolean))] as string[];
-
   const eventos = await db.evento.findMany({
-    where: clubIds.length
-      ? { equipo: { clubId: { in: clubIds } }, fecha: { gte: new Date() } }
+    where: jugadores.length
+      ? {
+          equipo: {
+            jugadores: {
+              some: {
+                OR: [{ usuarioId: session.user.id }, { tutorId: session.user.id }],
+              },
+            },
+          },
+          fecha: { gte: new Date() },
+        }
       : { id: "never" },
     orderBy: { fecha: "asc" },
     take: 5,
