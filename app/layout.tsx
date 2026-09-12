@@ -3,6 +3,7 @@ import { Sora, Oswald } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { CLUB_ONE_FAVICON_URL } from "@/lib/brand-assets";
+import { CookieConsent } from "@/components/legal/cookie-consent";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -19,10 +20,10 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "Club One presenta USA Goalkeeper Tour 2026",
+  title: "Club One | Gestión para clubes y academias de fútbol",
   description:
-    "Club One presenta el USA Goalkeeper Tour 2026: cuatro clínicas de élite para porteros en Texas.",
-  keywords: ["porteros", "goalkeeper", "fútbol", "Texas", "clínica", "Club One"],
+    "Club One conecta la operación de clubes, academias, entrenadores y jugadores de fútbol en un solo lugar.",
+  keywords: ["gestión deportiva", "club de fútbol", "academia de fútbol", "entrenadores", "jugadores", "Club One"],
   authors: [{ name: "Club One" }],
   manifest: "/manifest.webmanifest",
   icons: {
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body className="min-h-screen">
         <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
         <Providers>{children}</Providers>
+        <CookieConsent />
       </body>
     </html>
   );
