@@ -15,7 +15,7 @@
     "mobile:prepare": "node scripts/mobile-prepare.mjs",
     "mobile:sync": "node scripts/mobile-prepare.mjs && cap sync",
     "mobile:release": "node scripts/mobile-prepare.mjs --release && cap sync",
-    "mobile:assets": "capacitor-assets generate --ios --android --assetPath mobile/assets --iconBackgroundColor \"#0A0E14\" --iconBackgroundColorDark \"#0A0E14\" --splashBackgroundColor \"#0A0E14\" --splashBackgroundColorDark \"#0A0E14\"",
+    "mobile:assets": "npx --yes @capacitor/assets@3.0.5 generate --ios --android --assetPath mobile/assets --iconBackgroundColor \"#0A0E14\" --iconBackgroundColorDark \"#0A0E14\" --splashBackgroundColor \"#0A0E14\" --splashBackgroundColorDark \"#0A0E14\"",
     "mobile:ios": "cap open ios",
     "mobile:android": "cap open android"
   },
@@ -82,7 +82,6 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/leaflet": "^1.9.8",
