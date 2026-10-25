@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("cuenta") === "eliminada") {
+      setNotice("Tu cuenta fue eliminada correctamente.");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +60,12 @@ export default function LoginPage() {
           <h1 className="text-3xl font-display font-bold text-gradient mb-2">Club One</h1>
           <p className="text-white/60">One club. One platform.</p>
         </div>
+
+        {notice && !error && (
+          <Alert className="mb-6">
+            {notice}
+          </Alert>
+        )}
 
         {error && (
           <Alert variant="destructive" className="mb-6">

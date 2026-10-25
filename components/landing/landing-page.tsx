@@ -67,7 +67,7 @@ export function LandingPage() {
     <main id="contenido-principal" className="min-h-screen overflow-x-hidden bg-dark-900 text-foreground">
       <AnimatedBackground />
 
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6 sm:pt-5">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] sm:px-6 sm:pt-[calc(env(safe-area-inset-top,0px)+1.25rem)]">
         <div className={"pointer-events-auto mx-auto max-w-6xl transition-all duration-500 " + (scrolled ? "max-w-5xl" : "")}>
           <div className={"relative flex items-center justify-between border border-white/10 bg-dark-900/75 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,.28)] backdrop-blur-2xl transition-all duration-500 sm:px-4 " + (scrolled ? "rounded-[1.65rem] border-white/15" : "rounded-[1.9rem]")}>
             <Link href="/" className="flex items-center gap-2.5" aria-label="Club One inicio">

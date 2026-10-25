@@ -25,6 +25,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
+    // La cuenta de Stripe es compartida con otros productos: solo procesamos
+    // pagos creados por Club One (todos llevan solicitudId o mensualidadId).
+    const metadata = (event.data.object as { metadata?: Record<string, string> | null }).metadata;
+    if (!metadata?.solicitudId && !metadata?.mensualidadId) {
+      return NextResponse.json({ received: true, ignored: true });
+    }
+
     await db.webhookLog.create({
       data: {
         proveedor: "stripe",
@@ -40,7 +47,7 @@ export async function POST(req: Request) {
       event.type === "checkout.session.completed"
     ) {
       const payment = event.data.object as any;
-      const solicitudId = payment.metadata?.solicitudId || payment.client_reference_id;
+      const solicitudId = payment.metadata?.solicitudId;
 
       if (solicitudId && (event.type !== "checkout.session.completed" || payment.payment_status === "paid")) {
         const referencia = payment.payment_intent || payment.id;

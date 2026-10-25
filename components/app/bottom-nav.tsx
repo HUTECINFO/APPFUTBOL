@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { hapticTap } from "@/lib/native";
 import { Home, Calendar, CreditCard, MessageSquare, User } from "lucide-react";
 
 const navItems = [
@@ -28,6 +29,7 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => { if (!active) hapticTap(); }}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl transition-colors",
