@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { CLUB_ONE_FAVICON_URL } from "@/lib/brand-assets";
 import { CookieConsent } from "@/components/legal/cookie-consent";
+import { NativeShell } from "@/components/native/native-shell";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -51,6 +53,7 @@ export default function RootLayout({
         <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
         <Providers>{children}</Providers>
         <CookieConsent />
+        <NativeShell />
       </body>
     </html>
   );

@@ -79,7 +79,8 @@ Abre [http://localhost:3000](http://localhost:3000).
 - `/inscripcion/[slug]/confirmacion` — Confirmación de pago y creación de acceso
 - `/usa-goalkeeper-tour-2026` — Landing y selección de sede del USA Goalkeeper Tour 2026
 - `/club/[clubId]/evento` — Panel de métricas del evento (USD), separado de la operación por suscripción
-- `/app/inicio` — Vista mobile PWA
+- `/app/inicio` — Vista mobile PWA (inicio de la app nativa)
+- `/eliminar-cuenta` — Instrucciones públicas de eliminación de cuenta y datos
 
 ### Flujo del evento (USA Goalkeeper Tour)
 
@@ -91,6 +92,18 @@ Abre [http://localhost:3000](http://localhost:3000).
 4. En la confirmación el tutor crea su contraseña y entra a la app (`/app/inicio`).
 
 La configuración de los cuatro formularios externos y sus enlaces está en [`docs/USA_GOALKEEPER_TOUR_JOTFORM.md`](docs/USA_GOALKEEPER_TOUR_JOTFORM.md).
+
+## App móvil (iOS / Android)
+
+La app nativa usa Capacitor y carga el servidor desplegado. Guía completa de
+compilación y publicación en App Store y Google Play: [`docs/APP_MOVIL.md`](docs/APP_MOVIL.md).
+
+```bash
+cp .env.mobile.example .env.mobile   # CAPACITOR_SERVER_URL=https://tu-dominio
+npm run mobile:release               # sincroniza iOS y Android
+npm run mobile:ios                   # abre Xcode
+npm run mobile:android               # abre Android Studio
+```
 
 ## Webhooks
 

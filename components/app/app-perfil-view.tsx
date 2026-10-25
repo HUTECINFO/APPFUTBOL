@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { LogOut, Mail, Phone, Shield, Users, Palette, Layout, RotateCcw } from "lucide-react";
 import { saveAppTheme, AppThemeConfig } from "@/components/theme/app-theme-provider";
+import { DeleteAccountDialog } from "@/components/app/delete-account-dialog";
+import { isNativeApp } from "@/lib/native";
+import Link from "next/link";
 
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: "Super Admin",
@@ -243,11 +246,18 @@ export function AppPerfilView({ usuario, jugadores }: AppPerfilViewProps) {
         <Button
           variant="outline"
           className="h-12 w-full rounded-2xl border-red-500/30 font-bold uppercase tracking-wider text-red-400 hover:bg-red-500/10"
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => signOut({ callbackUrl: isNativeApp() ? "/login" : "/" })}
         >
           <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
         </Button>
+        <DeleteAccountDialog rol={usuario.rol} />
       </motion.section>
+
+      <nav className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[11px] font-semibold text-white/40">
+        <Link href="/aviso-de-privacidad" className="hover:text-pitch-300">Privacidad</Link>
+        <Link href="/terminos-y-condiciones" className="hover:text-pitch-300">Términos</Link>
+        <Link href="/eliminar-cuenta" className="hover:text-pitch-300">Eliminación de datos</Link>
+      </nav>
 
       <footer className="pb-4 pt-2 text-center text-[10px] uppercase tracking-[0.25em] text-white/30">
         By HUTEC

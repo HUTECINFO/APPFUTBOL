@@ -43,7 +43,7 @@ export function ClubHeader() {
   const isAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "CLUB_ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 glass border-b border-white/10">
+    <header className="safe-area-pt sticky top-0 z-40 glass border-b border-white/10">
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-white/50 lg:hidden">
           <ClubOneMark className="h-7 w-7" priority />

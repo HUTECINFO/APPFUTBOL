@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, Cookie, PageEdit, ShieldCheck } from "iconoir-react";
+import { ArrowLeft, Cookie, PageEdit, ShieldCheck, Trash } from "iconoir-react";
 import { ClubOneMark } from "@/components/branding/club-one-mark";
 
-type LegalPageType = "privacy" | "cookies" | "terms";
+type LegalPageType = "privacy" | "cookies" | "terms" | "deletion";
+
+const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 
 const content = {
   privacy: {
@@ -14,6 +16,7 @@ const content = {
       ["Para qué los usamos", "Usamos los datos para crear y administrar cuentas, organizar equipos y calendarios, gestionar registros, pagos cuando correspondan, enviar comunicaciones operativas, resolver solicitudes y proteger la plataforma."],
       ["Quién puede verlos", "El acceso está limitado a las personas autorizadas por cada club, academia u organización, y a proveedores necesarios para operar servicios como autenticación, infraestructura y procesamiento de pagos."],
       ["Tus derechos", "Puedes solicitar acceso, corrección, actualización o eliminación de tus datos a través del canal de contacto habilitado por tu organización o dentro de la plataforma. Algunas solicitudes pueden estar sujetas a obligaciones legales o contractuales aplicables."],
+      ["Eliminación de tu cuenta", "Puedes eliminar tu cuenta en cualquier momento desde la app, en Perfil → Eliminar mi cuenta. Al hacerlo borramos tu acceso, tus datos de perfil y tus mensajes. Los registros deportivos y de pagos que pertenecen a tu club se conservan sin vincularse a tu cuenta. Más detalles en la página Eliminación de cuenta y datos."],
       ["Seguridad y conservación", "Aplicamos medidas razonables de seguridad y conservamos la información solo durante el tiempo necesario para prestar el servicio, cumplir obligaciones y atender controversias."],
     ],
   },
@@ -40,20 +43,33 @@ const content = {
       ["Cambios y contacto", "Podemos actualizar estos términos cuando sea necesario. Cuando un cambio sea relevante, lo comunicaremos por los medios disponibles en la plataforma. El uso posterior a la actualización implica la aceptación de los términos vigentes."],
     ],
   },
+  deletion: {
+    title: "Eliminación de cuenta y datos",
+    intro: "Cómo eliminar tu cuenta de Club One (app para iOS y Android, y versión web) y qué ocurre con tu información.",
+    icon: Trash,
+    sections: [
+      ["Desde la app", "Inicia sesión en Club One, entra a Perfil y toca “Eliminar mi cuenta”. Confirma con tu contraseña y escribiendo ELIMINAR. La eliminación es inmediata y no se puede deshacer."],
+      ["Sin acceso a la app", supportEmail
+        ? `Si no puedes iniciar sesión, escríbenos a ${supportEmail} desde el correo con el que te registraste, con el asunto “Eliminar cuenta”. Atendemos la solicitud en un plazo máximo de 30 días.`
+        : "Si no puedes iniciar sesión, solicita la eliminación al administrador de tu club o academia, quien la canalizará con el equipo de Club One. Atendemos la solicitud en un plazo máximo de 30 días."],
+      ["Qué se elimina", "Tu cuenta de acceso (correo, nombre, teléfono, foto y contraseña), tus sesiones, tu membresía en chats y los mensajes que enviaste."],
+      ["Qué se conserva", "Los registros que pertenecen a la organización deportiva —ficha del jugador, asistencias, estadísticas, mensualidades y comprobantes de pago— se conservan desvinculados de tu cuenta, porque el club los necesita para su operación y obligaciones fiscales. Puedes pedir a tu club que también los elimine. La bitácora de seguridad conserva el registro de la eliminación."],
+    ],
+  },
 } as const;
 
 export function LegalPage({ type }: { type: LegalPageType }) {
   const page = content[type];
   const Icon = page.icon;
 
-  return <main id="contenido-principal" className="min-h-screen bg-dark-900 px-6 py-8 text-foreground sm:px-10 lg:px-12">
+  return <main id="contenido-principal" className="min-h-screen bg-dark-900 px-6 py-8 pt-[calc(env(safe-area-inset-top,0px)+2rem)] text-foreground sm:px-10 lg:px-12">
     <div className="mx-auto max-w-3xl">
       <header className="flex items-center justify-between border-b border-white/10 pb-6"><Link href="/" className="flex items-center gap-2"><ClubOneMark className="h-8 w-8" /><span className="font-display text-xl font-bold text-white">CLUB <span className="text-gradient">ONE</span></span></Link><Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-white/60 hover:text-pitch-300"><ArrowLeft className="h-4 w-4" /> Volver al inicio</Link></header>
       <article className="py-16 sm:py-20"><span className="grid h-12 w-12 place-items-center rounded-2xl border border-pitch-400/20 bg-pitch-500/10 text-pitch-300"><Icon className="h-6 w-6" /></span><p className="mt-8 text-xs font-bold uppercase tracking-[.2em] text-pitch-400">Club One · HUTEC</p><h1 className="mt-3 font-display text-5xl font-bold leading-none text-white sm:text-6xl">{page.title}</h1><p className="mt-6 text-base leading-8 text-white/65 sm:text-lg">{page.intro}</p><p className="mt-5 text-sm text-white/40">Última actualización: 11 de septiembre de 2026</p>
         <div className="mt-12 space-y-9">{page.sections.map(([heading, body]) => <section key={heading}><h2 className="font-display text-2xl font-bold text-white">{heading}</h2><p className="mt-3 text-base leading-7 text-white/60">{body}</p></section>)}</div>
         <div className="mt-14 rounded-2xl border border-white/10 bg-white/[.035] p-6 text-sm leading-6 text-white/55">Este contenido comunica las prácticas generales de Club One. Para necesidades regulatorias específicas de tu país, organización o tratamiento de menores, te recomendamos una revisión legal profesional.</div>
       </article>
-      <footer className="flex flex-wrap gap-x-5 gap-y-3 border-t border-white/10 py-8 text-sm font-semibold text-white/50"><Link href="/aviso-de-privacidad" className="hover:text-pitch-300">Privacidad</Link><Link href="/politica-de-cookies" className="hover:text-pitch-300">Cookies</Link><Link href="/terminos-y-condiciones" className="hover:text-pitch-300">Términos</Link></footer>
+      <footer className="flex flex-wrap gap-x-5 gap-y-3 border-t border-white/10 py-8 text-sm font-semibold text-white/50"><Link href="/aviso-de-privacidad" className="hover:text-pitch-300">Privacidad</Link><Link href="/politica-de-cookies" className="hover:text-pitch-300">Cookies</Link><Link href="/terminos-y-condiciones" className="hover:text-pitch-300">Términos</Link><Link href="/eliminar-cuenta" className="hover:text-pitch-300">Eliminar cuenta</Link></footer>
     </div>
   </main>;
 }

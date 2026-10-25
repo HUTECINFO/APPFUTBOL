@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Cookie, Xmark } from "iconoir-react";
+import { isNativeApp } from "@/lib/native";
 
 type Preferences = {
   necessary: true;
@@ -22,7 +23,8 @@ export function CookieConsent() {
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
-    if (!saved) setOpen(true);
+    // En la app nativa no hay analítica: se queda en esenciales sin interrumpir.
+    if (!saved) setOpen(!isNativeApp());
     else {
       try {
         setAnalytics(Boolean(JSON.parse(saved).analytics));
@@ -71,7 +73,7 @@ export function CookieConsent() {
   if (!open) return null;
 
   return (
-    <aside role="dialog" aria-modal="false" aria-labelledby="cookies-title" className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-xl rounded-[1.5rem] border border-white/15 bg-dark-800/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:bottom-6 sm:p-6">
+    <aside role="dialog" aria-modal="false" aria-labelledby="cookies-title" className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] left-4 right-4 z-[60] mx-auto max-w-xl rounded-[1.5rem] border border-white/15 bg-dark-800/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:bottom-6 sm:p-6">
       <div className="flex items-start gap-4">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-pitch-500/12 text-pitch-300"><Cookie className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">

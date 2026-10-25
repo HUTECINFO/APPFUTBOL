@@ -50,3 +50,8 @@ next-env.d.ts
 /build.log
 /output/
 /.playwright-cli/
+
+# app móvil
+.env.mobile
+/mobile/www/config.js
+

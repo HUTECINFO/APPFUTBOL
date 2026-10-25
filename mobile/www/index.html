@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Club One</title>
+  <style>html, body { margin: 0; height: 100%; background: #0A0E14; }</style>
+</head>
+<body>
+  <script src="config.js"></script>
+  <script>
+    var startUrl = window.CLUB_ONE_CONFIG && window.CLUB_ONE_CONFIG.startUrl;
+    window.location.replace(startUrl || "offline.html");
+  </script>
+</body>
+</html>

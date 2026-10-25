@@ -15,5 +15,5 @@ export default defineConfig([
       "react/no-unescaped-entities": "off",
     },
   },
-  globalIgnores([".next/**", "node_modules/**", "output/**"]),
+  globalIgnores([".next/**", "node_modules/**", "output/**", "ios/**", "android/**", "mobile/www/**"]),
 ]);
