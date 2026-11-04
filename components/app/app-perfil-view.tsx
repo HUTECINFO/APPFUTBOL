@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signOutTo } from "@/lib/sign-out";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export function AppPerfilView({ usuario, jugadores }: AppPerfilViewProps) {
   };
 
   return (
-    <div className="px-4 pt-6 safe-area-pt">
+    <div className="px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -246,7 +246,7 @@ export function AppPerfilView({ usuario, jugadores }: AppPerfilViewProps) {
         <Button
           variant="outline"
           className="h-12 w-full rounded-2xl border-red-500/30 font-bold uppercase tracking-wider text-red-400 hover:bg-red-500/10"
-          onClick={() => signOut({ callbackUrl: isNativeApp() ? "/login" : "/" })}
+          onClick={() => signOutTo(isNativeApp() ? "/login" : "/")}
         >
           <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
         </Button>

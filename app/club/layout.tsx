@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ClubSidebar } from "@/components/layout/club-sidebar";
 import { ClubHeader } from "@/components/layout/club-header";
+import { ClubBottomNav } from "@/components/layout/club-bottom-nav";
 import { brandCssVariables } from "@/lib/theme";
 import { esClubEvento } from "@/lib/evento-tour";
 
@@ -84,8 +85,9 @@ export default async function ClubLayout(
       {club && <ClubSidebar clubNombre={club.nombre} role={role} esEvento={esClubEvento(club.slug)} />}
       <div className="relative z-10 flex min-w-0 flex-1 flex-col min-h-screen">
         <ClubHeader />
-        <main id="contenido-principal" className="page-enter flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main id="contenido-principal" className="page-enter flex-1 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] sm:p-6 sm:pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] lg:p-8">{children}</main>
       </div>
+      {club && <ClubBottomNav role={role} esEvento={esClubEvento(club.slug)} />}
     </div>
   );
 }

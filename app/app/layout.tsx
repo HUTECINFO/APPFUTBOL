@@ -20,7 +20,7 @@ export default async function AppLayout({
       <div className="relative min-h-[100dvh] overflow-x-hidden bg-dark-900 text-foreground">
         <div aria-hidden className="club-ambient-orb club-ambient-orb--one" />
         <div aria-hidden className="club-ambient-orb club-ambient-orb--two" />
-        <main id="contenido-principal" className="relative z-10 mx-auto max-w-md pb-32">
+        <main id="contenido-principal" className="relative z-10 mx-auto max-w-md pb-[calc(env(safe-area-inset-bottom,0px)+7.5rem)]">
           {children}
         </main>
         <BottomNav />

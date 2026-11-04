@@ -20,7 +20,7 @@ import {
 import { motion } from "framer-motion";
 import { ClubOneMark } from "@/components/branding/club-one-mark";
 
-const navItems = (clubId: string, role: string, esEvento: boolean) => [
+export const clubNavItems = (clubId: string, role: string, esEvento: boolean) => [
   { href: `/club/${clubId}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
   ...(esEvento && (role === "SUPER_ADMIN" || role === "CLUB_ADMIN")
     ? [{ href: `/club/${clubId}/evento`, label: "Evento", icon: Goal }]
@@ -58,7 +58,7 @@ export function ClubSidebar({ clubNombre, role, esEvento = false }: { clubNombre
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems(clubId, role, esEvento).map((item) => {
+        {clubNavItems(clubId, role, esEvento).map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (

@@ -80,7 +80,7 @@ export function AppChatView({ equipos, mensajesIniciales, userId, role }: AppCha
   };
 
   return (
-    <div className="flex h-[calc(100dvh-7.5rem)] flex-col px-4 pt-6 safe-area-pt">
+    <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom,0px))] flex-col px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
       <motion.header
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}

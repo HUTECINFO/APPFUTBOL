@@ -150,8 +150,8 @@
 }
 
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(10px) scale(0.995); filter: blur(4px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes ambient-drift-one {
@@ -176,22 +176,36 @@
   aspect-ratio: 1;
   border-radius: 9999px;
   opacity: .13;
-  filter: blur(90px);
+  /* Degradado en lugar de filter: blur(), que se vuelve a pintar en cada cuadro de la animación. */
+  background: radial-gradient(circle closest-side, var(--orb-color) 0%, transparent 100%);
   will-change: transform;
 }
 
 .club-ambient-orb--one {
   top: -18rem;
   right: -12rem;
-  background: hsl(var(--pitch-400));
+  --orb-color: hsl(var(--pitch-400));
   animation: ambient-drift-one 16s ease-in-out infinite;
 }
 
 .club-ambient-orb--two {
   bottom: -22rem;
   left: 10%;
-  background: hsl(var(--gold-400));
+  --orb-color: hsl(var(--gold-400));
   animation: ambient-drift-two 19s ease-in-out infinite;
+}
+
+/* En el WebView de la app los desenfoques en vivo (backdrop-filter) detrás de
+   cada tarjeta y los orbes animados traban el scroll, sobre todo en iOS. */
+.native-app *,
+.native-app *::before,
+.native-app *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.native-app .club-ambient-orb {
+  animation: none;
 }
 
 .skip-link {

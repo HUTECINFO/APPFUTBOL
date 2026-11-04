@@ -61,7 +61,7 @@ export function AppInicioView({ user, jugadores, eventos }: AppInicioViewProps) 
       variants={container}
       initial="hidden"
       animate="show"
-      className="px-4 pt-6 safe-area-pt"
+      className="px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]"
     >
       <motion.header variants={item} className="mb-6 flex items-center justify-between">
         <div>
