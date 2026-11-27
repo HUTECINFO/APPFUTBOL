@@ -73,10 +73,10 @@ function edad(fecha: string | Date) {
 }
 
 function RadarAtributos({ valores, compacto = false }: { valores: Record<string, string | number | null | undefined>; compacto?: boolean }) {
-  const data = ATRIBUTOS.map((a) => ({ atributo: a.label.split(" ")[0], valor: Number(valores[a.key]) || 0 }));
+  const data = ATRIBUTOS.map((a) => ({ atributo: a.corto, valor: Number(valores[a.key]) || 0 }));
   return (
     <ResponsiveContainer width="100%" height={compacto ? 180 : 260}>
-      <RadarChart data={data} outerRadius={compacto ? "68%" : "72%"}>
+      <RadarChart data={data} outerRadius={compacto ? "60%" : "62%"}>
         <PolarGrid stroke="rgba(255,255,255,0.12)" />
         <PolarAngleAxis dataKey="atributo" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: compacto ? 9 : 11 }} />
         <PolarRadiusAxis domain={[0, 10]} tick={false} axisLine={false} />

@@ -2,14 +2,14 @@ import { z } from "zod";
 
 /** Atributos de la rúbrica deportiva, en el orden de la plantilla (columnas S a Z). */
 export const ATRIBUTOS = [
-  { key: "gestoTecnico", label: "Gesto técnico", grupo: "Técnico", descripcion: "Control, primer toque, conducción y ejecución técnica bajo presión." },
-  { key: "participacionJuego", label: "Participación en juego", grupo: "Técnico", descripcion: "Escaneo, lectura de opciones y anticipación de soluciones." },
-  { key: "paseAcertado", label: "Pase acertado", grupo: "Técnico", descripcion: "Calidad, precisión, peso, variedad y selección de los pases." },
-  { key: "velocidad", label: "Velocidad", grupo: "Físico", descripcion: "Aceleración, velocidad de desplazamiento y recuperación." },
-  { key: "agilidad", label: "Agilidad", grupo: "Físico", descripcion: "Cambios de dirección, coordinación, equilibrio y reacción." },
-  { key: "resistencia", label: "Resistencia", grupo: "Físico", descripcion: "Capacidad de sostener esfuerzos e intensidad durante el partido." },
-  { key: "fuerza", label: "Fuerza", grupo: "Físico", descripcion: "Capacidad para proteger balón, resistir contacto y competir en duelos." },
-  { key: "aptitudDeportiva", label: "Aptitud deportiva", grupo: "Actitud", descripcion: "Iniciativa, compromiso y actitud para presionar, recuperar y replegar." },
+  { key: "gestoTecnico", corto: "Técnica", label: "Gesto técnico", grupo: "Técnico", descripcion: "Control, primer toque, conducción y ejecución técnica bajo presión." },
+  { key: "participacionJuego", corto: "Juego", label: "Participación en juego", grupo: "Técnico", descripcion: "Escaneo, lectura de opciones y anticipación de soluciones." },
+  { key: "paseAcertado", corto: "Pase", label: "Pase acertado", grupo: "Técnico", descripcion: "Calidad, precisión, peso, variedad y selección de los pases." },
+  { key: "velocidad", corto: "Velocidad", label: "Velocidad", grupo: "Físico", descripcion: "Aceleración, velocidad de desplazamiento y recuperación." },
+  { key: "agilidad", corto: "Agilidad", label: "Agilidad", grupo: "Físico", descripcion: "Cambios de dirección, coordinación, equilibrio y reacción." },
+  { key: "resistencia", corto: "Resist.", label: "Resistencia", grupo: "Físico", descripcion: "Capacidad de sostener esfuerzos e intensidad durante el partido." },
+  { key: "fuerza", corto: "Fuerza", label: "Fuerza", grupo: "Físico", descripcion: "Capacidad para proteger balón, resistir contacto y competir en duelos." },
+  { key: "aptitudDeportiva", corto: "Aptitud", label: "Aptitud deportiva", grupo: "Actitud", descripcion: "Iniciativa, compromiso y actitud para presionar, recuperar y replegar." },
 ] as const;
 
 export type AtributoKey = (typeof ATRIBUTOS)[number]["key"];
