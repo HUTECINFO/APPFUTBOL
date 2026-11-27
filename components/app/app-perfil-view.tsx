@@ -149,7 +149,7 @@ export function AppPerfilView({ usuario, jugadores }: AppPerfilViewProps) {
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold uppercase tracking-wide">
             <Users className="h-4 w-4 text-white/50" /> Mi plantilla
           </h2>
-          <div className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-2">
             {jugadores.map((j) => (
               <Card key={j.id} className="glass-card flex items-center gap-3 p-4">
                 <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-pitch-500/20 to-gold-500/20 font-display text-lg font-bold text-white">

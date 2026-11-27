@@ -113,7 +113,7 @@ export function AppCalendarioView({ eventos, jugadores }: AppCalendarioViewProps
             <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.25em] text-white/40">
               {mes}
             </h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {items.map((e, i) => {
                 const meta = TIPO_META[e.tipo] || TIPO_META.ENTRENAMIENTO;
                 const Icon = meta.icon;

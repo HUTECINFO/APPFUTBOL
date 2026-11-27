@@ -114,7 +114,7 @@ export function AppPagosView({ mensualidades, stripeEnabled }: AppPagosViewProps
       </motion.section>
 
       <h2 className="mb-3 font-display text-lg font-semibold uppercase tracking-wide">Mensualidades</h2>
-      <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {mensualidades.length === 0 ? (
           <Card className="glass-panel p-8 text-center">
             <CreditCard className="mx-auto mb-3 h-10 w-10 text-white/20" />

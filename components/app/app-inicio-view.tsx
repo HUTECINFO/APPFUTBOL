@@ -227,7 +227,7 @@ export function AppInicioView({ user, jugadores, eventos }: AppInicioViewProps) 
             </Card>
           )
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-2">
             {agenda.map((e) => {
               const meta = TIPO_META[e.tipo] || TIPO_META.ENTRENAMIENTO;
               const Icon = meta.icon;
