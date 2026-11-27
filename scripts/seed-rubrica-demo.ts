@@ -7,15 +7,11 @@
 import { randomUUID } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-  auth: { persistSession: false },
-});
-
 const CLUB_SLUG = "club-demo";
 
 type Perfil = Record<string, unknown>;
 
-const PERFILES: Record<string, Perfil> = {
+export const PERFILES: Record<string, Perfil> = {
   "Juan Pérez": {
     matricula: "240101", categoriaCompetitiva: "Menor", estatura: 1.62, peso: 50, pieDominante: "Derecho",
     rolPrincipal: "Portero líbero", rolSecundario: "Portero de área",
@@ -121,6 +117,10 @@ const PERFILES: Record<string, Perfil> = {
 };
 
 async function main() {
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+
   const { data: club, error } = await supabase.from("clubs").select("id, nombre").eq("slug", CLUB_SLUG).single();
   if (error || !club) throw new Error(`No se encontró el club ${CLUB_SLUG}: ${error?.message}`);
 
@@ -157,7 +157,9 @@ async function main() {
   console.log(`${club.nombre}: marcado como colegio, ${cargados} perfiles de rúbrica cargados.`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("seed-rubrica-demo.ts")) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
