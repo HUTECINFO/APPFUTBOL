@@ -48,6 +48,7 @@ const models: Record<string, ModelConfig> = {
     asistencias: { kind: "many", model: "asistencia", foreign: "jugadorId" }, goles: { kind: "many", model: "gol", foreign: "jugadorId" },
     tarjetas: { kind: "many", model: "tarjeta", foreign: "jugadorId" }, cambiosEntra: { kind: "many", model: "cambio", foreign: "jugadorEntraId" },
     cambiosSale: { kind: "many", model: "cambio", foreign: "jugadorSaleId" }, evaluaciones: { kind: "many", model: "evaluacion", foreign: "jugadorId" },
+    perfilesDeportivos: { kind: "many", model: "perfilDeportivo", foreign: "jugadorId" },
   } },
   evento: { table: "eventos", id: true, updatedAt: true, relations: {
     equipo: { kind: "one", model: "equipo", local: "equipoId" }, sede: { kind: "one", model: "sede", local: "sedeId" },
@@ -72,6 +73,7 @@ const models: Record<string, ModelConfig> = {
     jugadorSale: { kind: "one", model: "jugador", local: "jugadorSaleId" },
   } },
   evaluacion: { table: "evaluaciones", id: true, updatedAt: true, relations: { jugador: { kind: "one", model: "jugador", local: "jugadorId" } } },
+  perfilDeportivo: { table: "perfiles_deportivos", id: true, updatedAt: true, relations: { jugador: { kind: "one", model: "jugador", local: "jugadorId" } } },
   chat: { table: "chats", id: true, updatedAt: true, relations: {
     equipo: { kind: "one", model: "equipo", local: "equipoId" }, mensajes: { kind: "many", model: "mensajeChat", foreign: "chatId" },
     miembros: { kind: "many", model: "chatMiembro", foreign: "chatId" },

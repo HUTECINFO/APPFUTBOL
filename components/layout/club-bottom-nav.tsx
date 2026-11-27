@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, Calendar, CreditCard, Trophy, MessageSquare, MoreHorizontal, X } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, CreditCard, Trophy, MessageSquare, MoreHorizontal, X, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticTap } from "@/lib/native";
 import { clubNavItems } from "@/components/layout/club-sidebar";
@@ -17,18 +17,20 @@ const adminDock = (clubId: string) => [
   { href: `/club/${clubId}/cobros`, label: "Cobros", icon: CreditCard },
 ];
 
-const coachDock = (clubId: string) => [
+const coachDock = (clubId: string, esColegio: boolean) => [
   { href: `/club/${clubId}/dashboard`, label: "Inicio", icon: LayoutDashboard },
   { href: `/club/${clubId}/equipos`, label: "Equipos", icon: Users },
   { href: `/club/${clubId}/calendario`, label: "Agenda", icon: Calendar },
-  { href: `/club/${clubId}/rankings`, label: "Ranking", icon: Trophy },
+  esColegio
+    ? { href: `/club/${clubId}/rubrica`, label: "Rúbrica", icon: ClipboardCheck }
+    : { href: `/club/${clubId}/rankings`, label: "Ranking", icon: Trophy },
   { href: `/club/${clubId}/chat`, label: "Chat", icon: MessageSquare },
 ];
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
 /** Navegación del club en celular: dock fijo abajo; "Más" abre el resto de secciones. */
-export function ClubBottomNav({ role, esEvento = false }: { role: string; esEvento?: boolean }) {
+export function ClubBottomNav({ role, esEvento = false, esColegio = false }: { role: string; esEvento?: boolean; esColegio?: boolean }) {
   const params = useParams();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -36,9 +38,9 @@ export function ClubBottomNav({ role, esEvento = false }: { role: string; esEven
   if (!clubId) return null;
 
   const isAdmin = role === "SUPER_ADMIN" || role === "CLUB_ADMIN";
-  const dock = isAdmin ? adminDock(clubId) : coachDock(clubId);
+  const dock = isAdmin ? adminDock(clubId) : coachDock(clubId, esColegio);
   const dockHrefs = new Set(dock.map((item) => item.href));
-  const more = isAdmin ? clubNavItems(clubId, role, esEvento).filter((item) => !dockHrefs.has(item.href)) : [];
+  const more = isAdmin ? clubNavItems(clubId, role, esEvento, esColegio).filter((item) => !dockHrefs.has(item.href)) : [];
   const moreActive = more.some((item) => isActive(pathname, item.href));
 
   const itemClass = (active: boolean) =>

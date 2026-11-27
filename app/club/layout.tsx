@@ -47,6 +47,7 @@ export default async function ClubLayout(
         id: true,
         nombre: true,
         slug: true,
+        esColegio: true,
         logoUrl: true,
         colorPrimario: true,
         colorSecundario: true,
@@ -64,6 +65,7 @@ export default async function ClubLayout(
         id: true,
         nombre: true,
         slug: true,
+        esColegio: true,
         logoUrl: true,
         colorPrimario: true,
         colorSecundario: true,
@@ -82,12 +84,12 @@ export default async function ClubLayout(
     <div className="relative flex min-h-screen overflow-x-clip" style={themeVars}>
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--one" />
       <div aria-hidden="true" className="club-ambient-orb club-ambient-orb--two" />
-      {club && <ClubSidebar clubNombre={club.nombre} role={role} esEvento={esClubEvento(club.slug)} />}
+      {club && <ClubSidebar clubNombre={club.nombre} role={role} esEvento={esClubEvento(club.slug)} esColegio={Boolean(club.esColegio)} />}
       <div className="relative z-10 flex min-w-0 flex-1 flex-col min-h-screen">
         <ClubHeader />
         <main id="contenido-principal" className="page-enter flex-1 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] sm:p-6 sm:pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] lg:p-8">{children}</main>
       </div>
-      {club && <ClubBottomNav role={role} esEvento={esClubEvento(club.slug)} />}
+      {club && <ClubBottomNav role={role} esEvento={esClubEvento(club.slug)} esColegio={Boolean(club.esColegio)} />}
     </div>
   );
 }
