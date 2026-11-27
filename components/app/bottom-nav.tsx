@@ -20,7 +20,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-3 dock-bottom z-50 mx-auto max-w-md">
-      <div className="rounded-[1.75rem] border border-white/10 bg-dark-800/70 px-2 py-2 shadow-2xl shadow-black/50 backdrop-blur-2xl">
+      <div className="rounded-[1.75rem] border border-white/10 bg-dark-800/95 px-2 py-2 shadow-2xl shadow-black/50">
         <div className="flex items-center">
           {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

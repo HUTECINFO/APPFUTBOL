@@ -6,6 +6,10 @@ const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // La exportación de la rúbrica llena la plantilla de Excel del colegio.
+  outputFileTracingIncludes: {
+    "/api/clubs/\\[clubId\\]/rubrica/export": ["./lib/templates/**/*"],
+  },
   images: {
     remotePatterns: [
       { protocol: "http", hostname: "localhost" },

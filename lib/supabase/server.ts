@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 function required(name: string) {
   const value = process.env[name];
@@ -40,4 +40,17 @@ export function createSupabasePublicClient() {
   return createClient(required("NEXT_PUBLIC_SUPABASE_URL"), key);
 }
 
-export const supabaseAdmin = createSupabaseAdmin();
+let admin: SupabaseClient | undefined;
+
+/**
+ * Se crea al primer uso y no al importar el módulo: `next build` carga las rutas
+ * para recolectar su configuración y un entorno sin la clave secreta (p. ej. los
+ * Preview de Vercel) fallaba en ese paso.
+ */
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    admin ??= createSupabaseAdmin();
+    const value = Reflect.get(admin, prop, admin);
+    return typeof value === "function" ? value.bind(admin) : value;
+  },
+});

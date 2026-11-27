@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { signOutTo } from "@/lib/sign-out";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ export function DeleteAccountDialog({ rol }: { rol: string }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo eliminar la cuenta.");
-      await signOut({ callbackUrl: "/login?cuenta=eliminada" });
+      await signOutTo("/login?cuenta=eliminada");
     } catch (err: any) {
       setError(err.message);
       setLoading(false);

@@ -53,7 +53,7 @@ export function AppPagosView({ mensualidades, stripeEnabled }: AppPagosViewProps
   };
 
   return (
-    <div className="px-4 pt-6 safe-area-pt">
+    <div className="px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
       <motion.header
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}

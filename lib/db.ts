@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import * as React from "react";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 type Relation =
@@ -47,6 +48,7 @@ const models: Record<string, ModelConfig> = {
     asistencias: { kind: "many", model: "asistencia", foreign: "jugadorId" }, goles: { kind: "many", model: "gol", foreign: "jugadorId" },
     tarjetas: { kind: "many", model: "tarjeta", foreign: "jugadorId" }, cambiosEntra: { kind: "many", model: "cambio", foreign: "jugadorEntraId" },
     cambiosSale: { kind: "many", model: "cambio", foreign: "jugadorSaleId" }, evaluaciones: { kind: "many", model: "evaluacion", foreign: "jugadorId" },
+    perfilesDeportivos: { kind: "many", model: "perfilDeportivo", foreign: "jugadorId" },
   } },
   evento: { table: "eventos", id: true, updatedAt: true, relations: {
     equipo: { kind: "one", model: "equipo", local: "equipoId" }, sede: { kind: "one", model: "sede", local: "sedeId" },
@@ -71,6 +73,7 @@ const models: Record<string, ModelConfig> = {
     jugadorSale: { kind: "one", model: "jugador", local: "jugadorSaleId" },
   } },
   evaluacion: { table: "evaluaciones", id: true, updatedAt: true, relations: { jugador: { kind: "one", model: "jugador", local: "jugadorId" } } },
+  perfilDeportivo: { table: "perfiles_deportivos", id: true, updatedAt: true, relations: { jugador: { kind: "one", model: "jugador", local: "jugadorId" } } },
   chat: { table: "chats", id: true, updatedAt: true, relations: {
     equipo: { kind: "one", model: "equipo", local: "equipoId" }, mensajes: { kind: "many", model: "mensajeChat", foreign: "chatId" },
     miembros: { kind: "many", model: "chatMiembro", foreign: "chatId" },
@@ -120,10 +123,41 @@ function dbError(error: any): never {
   throw wrapped;
 }
 
+// Las consultas se resuelven leyendo tablas completas y filtrando en memoria, y
+// cada relación vuelve a consultar su tabla por cada fila. Para no repetir la
+// misma descarga cientos de veces, cada tabla se lee una sola vez por render
+// (React cache) y las lecturas simultáneas comparten la misma petición. Toda
+// escritura descarta lo leído para no servir datos viejos.
+// Fuera de Next (scripts con tsx) React no expone `cache` y solo aplica lo segundo.
+const renderTables: () => Map<string, Promise<any[]>> =
+  typeof (React as any).cache === "function"
+    ? (React as any).cache(() => new Map<string, Promise<any[]>>())
+    : () => new Map<string, Promise<any[]>>();
+const inFlightTables = new Map<string, Promise<any[]>>();
+
+function table(name: string): Promise<any[]> {
+  const scoped = renderTables();
+  const cached = scoped.get(name) ?? inFlightTables.get(name);
+  if (cached) return cached;
+  const request = (async () => {
+    const { data, error } = await supabaseAdmin.from(name).select("*");
+    if (error) dbError(error);
+    return fromDatabase(data ?? []) as any[];
+  })();
+  scoped.set(name, request);
+  inFlightTables.set(name, request);
+  const forget = (map: Map<string, Promise<any[]>>) => { if (map.get(name) === request) map.delete(name); };
+  request.then(() => forget(inFlightTables), () => { forget(inFlightTables); forget(scoped); });
+  return request;
+}
+
+function invalidateTables() {
+  renderTables().clear();
+  inFlightTables.clear();
+}
+
 async function all(model: string) {
-  const { data, error } = await supabaseAdmin.from(models[model].table).select("*");
-  if (error) dbError(error);
-  return fromDatabase(data ?? []);
+  return table(models[model].table);
 }
 
 async function related(model: string, row: any, name: string, args: any = {}) {
@@ -138,9 +172,8 @@ async function related(model: string, row: any, name: string, args: any = {}) {
     return findMany(relation.model, { ...args, where: { ...(args.where ?? {}), [relation.foreign]: row[relation.local ?? "id"] } });
   }
 
-  const { data: links, error } = await supabaseAdmin.from(relation.join).select(relation.target).eq(relation.source, row.id);
-  if (error) dbError(error);
-  const ids = (links ?? []).map((link: any) => link[relation.target]);
+  const links = (await table(relation.join)).filter((link: any) => link[relation.source] === row.id);
+  const ids = links.map((link: any) => link[relation.target]);
   return ids.length ? findMany(relation.model, { ...args, where: { ...(args.where ?? {}), id: { in: ids } } }) : [];
 }
 
@@ -254,6 +287,7 @@ async function insert(model: string, input: any) {
   if (config.updatedAt) data.updatedAt = new Date().toISOString();
   config.defaults?.(data);
   const { data: created, error } = await supabaseAdmin.from(config.table).insert(toDatabase(data)).select().single();
+  invalidateTables();
   if (error) dbError(error);
   const row = fromDatabase(created);
 
@@ -264,6 +298,7 @@ async function insert(model: string, input: any) {
       const items = Array.isArray(op.connect) ? op.connect : [op.connect];
       const links = items.map((item: any) => ({ [relation.source]: row.id, [relation.target]: item.id }));
       const { error: linkError } = await supabaseAdmin.from(relation.join).upsert(links);
+      invalidateTables();
       if (linkError) dbError(linkError);
     } else if (relation.kind === "manyToMany" && op.create) {
       const items = Array.isArray(op.create) ? op.create : [op.create];
@@ -272,6 +307,7 @@ async function insert(model: string, input: any) {
         const { error: linkError } = await supabaseAdmin
           .from(relation.join)
           .insert({ [relation.source]: row.id, [relation.target]: target.id });
+        invalidateTables();
         if (linkError) dbError(linkError);
       }
     } else if (relation.kind === "many" && op.create) {
@@ -320,12 +356,14 @@ function client(model: string) {
       const query = supabaseAdmin.from(config.table).update(toDatabase(changes));
       const result = current.id != null ? query.eq("id", current.id) : query;
       const { data, error } = await result.select().single();
+      invalidateTables();
       if (error) dbError(error);
       for (const [name, operation] of Object.entries(relationChanges)) {
         const relation = config.relations![name]; const op: any = operation;
         if (relation.kind === "manyToMany" && op.connect) {
           const items = Array.isArray(op.connect) ? op.connect : [op.connect];
           const { error: linkError } = await supabaseAdmin.from(relation.join).upsert(items.map((item: any) => ({ [relation.source]: current.id, [relation.target]: item.id })));
+          invalidateTables();
           if (linkError) dbError(linkError);
         }
       }
@@ -346,6 +384,7 @@ function client(model: string) {
       if (!current) throw new Error(`${model} not found`);
       const query = supabaseAdmin.from(config.table).delete();
       const { error } = current.id != null ? await query.eq("id", current.id) : await query;
+      invalidateTables();
       if (error) dbError(error);
       return current;
     },
@@ -354,6 +393,7 @@ function client(model: string) {
       if (!rows.length) return { count: 0 };
       const ids = rows.map((row: any) => row.id).filter(Boolean);
       const { error } = await supabaseAdmin.from(config.table).delete().in("id", ids);
+      invalidateTables();
       if (error) dbError(error);
       return { count: rows.length };
     },
